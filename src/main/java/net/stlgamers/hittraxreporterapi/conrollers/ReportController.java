@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
+@CrossOrigin
 @Controller
 @RequestMapping("/report")
 public class ReportController {
