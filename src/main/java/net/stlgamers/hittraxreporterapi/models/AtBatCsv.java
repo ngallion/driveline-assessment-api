@@ -8,12 +8,14 @@ import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
 import java.lang.reflect.Field;
 
 @Data
-@JsonPropertyOrder( {"AB","Date"," Time Stamp"," Pitch"," Strike Zone"," P. Type"," Velo"," LA"," Dist"," Res",
+@JsonPropertyOrder( {"#","AB","Date"," Time Stamp"," Pitch"," Strike Zone"," P. Type"," Velo"," LA"," Dist"," Res",
         " Type"," Horiz. Angle"," Pts"," Hand Speed"," BV"," Trigger to Impact"," AA",
         " Impact Momentum"," Strike Zone Bottom"," Strike Zone Top"," Strike Zone Width",
         " Vertical Distance"," Horizontal Distance"," POI X"," POI Y"," POI Z"," Bat Material",
         " User"," Pitch Angle"," Batting"," Level"," Opposing Player"," Tag"})
 public class AtBatCsv {
+    @JsonProperty("#")
+    private String number;
     @JsonProperty("AB")
     private String ab;
     @JsonProperty("Date")

@@ -98,7 +98,7 @@ public class ReportService {
         AtBatCsvToEntityConverter converter = new AtBatCsvToEntityConverter();
         List<AtBat> allAtBats = csv
                 .stream()
-                .filter(element -> (int) Double.parseDouble(element.getVelo()) > 50)
+                .filter(element -> element.getVelo() != null && (int) Double.parseDouble(element.getVelo()) > 50)
                 .map(converter::convert)
                 .collect(Collectors.toList());
         return allAtBats;
