@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
+import net.stlgamers.hittraxreporterapi.http.ExitVeloVsLaunchAngleResult;
 import net.stlgamers.hittraxreporterapi.http.ReportAddedResponse;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
 import net.stlgamers.hittraxreporterapi.models.AtBatCsv;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,13 +38,15 @@ public class ReportService {
         this.sessionService = sessionService;
     }
 
-    public ReportAddedResponse addReport(AddReportRequest request) throws IOException {
+    public Report addReport(AddReportRequest request) throws IOException {
 
         List<AtBatCsv> atBatCsvs = createListOfAtBatsFromCsvString(request.getReport());
         List<AtBat> atBats = convertListOfAtBatCSVToAtBatEntities(atBatCsvs);
         Session session = saveSessionToDatabase(atBats);
 
-        return new ReportAddedResponse(session.getId().toString(), "success");
+        Report report = getReport(Arrays.asList(session.getId()));
+
+        return report;
     }
 
     public Report getReport(List<Long> request) {
@@ -60,6 +64,7 @@ public class ReportService {
         report.setGroundBallPercentage(percentGroundBalls.toString().substring(0, 4));
         report.setFlyBallPercentage(percentFlyBalls.toString().substring(0, 4));
         report.setLineDrivePercentage(percentLineDrives.toString().substring(0, 4));
+        report.setExitVeloVsLaunchAngle(getExitVeloVsLaunchAngleSet(request));
 
         return report;
     }
@@ -84,6 +89,20 @@ public class ReportService {
                 .collect(Collectors.toList());
         return allAtBats;
 
+    }
+
+    public List<ExitVeloVsLaunchAngleResult> getExitVeloVsLaunchAngleSet(List<Long> sessionIds) {
+        List<ExitVeloVsLaunchAngleResult> set = Arrays.asList(
+                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, -50, -10),
+                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, -10, 0),
+                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 0, 10),
+                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 10, 20),
+                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 20, 30),
+                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 30, 40),
+                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 40, 100)
+        );
+
+        return set;
     }
 
     public Session saveSessionToDatabase(List<AtBat> atBats) {

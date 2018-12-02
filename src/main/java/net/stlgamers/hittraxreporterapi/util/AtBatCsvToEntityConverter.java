@@ -21,6 +21,7 @@ public class AtBatCsvToEntityConverter {
         atBat.setStrikeZonePosition(csv.getStrikeZone() == null ? null : Integer.parseInt(csv.getStrikeZone()));
         atBat.setPitchType(csv.getPType());
         atBat.setExitVelocity((int) Double.parseDouble(csv.getVelo()));
+        atBat.setVerticalAngle((int) Double.parseDouble(csv.getLa()));
         atBat.setDistance((int) Double.parseDouble(csv.getDist()));
         atBat.setResult(csv.getRes());
         atBat.setType(csv.getType());

@@ -1,5 +1,6 @@
 package net.stlgamers.hittraxreporterapi.services;
 
+import net.stlgamers.hittraxreporterapi.http.ExitVeloVsLaunchAngleResult;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
 import net.stlgamers.hittraxreporterapi.models.Session;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
@@ -7,10 +8,7 @@ import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,6 +94,37 @@ public class SessionService {
                 .collect(Collectors.toList());
 
         return filteredAtBats;
+    }
+
+    public ExitVeloVsLaunchAngleResult getResultOfExitVeloVsLaunchAngle(List<Long> sessionIds, Integer lowerLimit, Integer upperLimit) {
+        List<AtBat> totalResults = getAllAtBatsAbove50EVForAllSessionsById(sessionIds);
+
+        List<AtBat> atBatsInRange = totalResults
+                .stream()
+                .filter(result -> result.getVerticalAngle() != null && result.getVerticalAngle() > lowerLimit && result.getVerticalAngle() < upperLimit)
+                .collect(Collectors.toList());
+
+        String range = upperLimit ==
+                -10 ? "< -10" : lowerLimit == 40 ? "> 40" : lowerLimit.toString() + " - " + upperLimit.toString();
+
+        if (atBatsInRange.size() == 0) {
+            return new ExitVeloVsLaunchAngleResult(range, "N/A", "N/A", "0");
+        }
+
+        List<Integer> allSortedExitVelocity = atBatsInRange.stream()
+                .map(AtBat::getExitVelocity)
+                .sorted()
+                .collect(Collectors.toList());
+
+        Integer maxExitVelocity = allSortedExitVelocity.get(allSortedExitVelocity.size() - 1);
+        Double avgExitVelocity = allSortedExitVelocity
+                .stream()
+                .reduce(new Averager(), Averager::accept, Averager::combine)
+                .average();
+        Double percentOfResults = ((double) allSortedExitVelocity.size() / totalResults.size() * 100);
+
+        return new ExitVeloVsLaunchAngleResult(range, maxExitVelocity.toString(),
+                avgExitVelocity.toString(), percentOfResults.toString());
     }
 
     static class Averager {

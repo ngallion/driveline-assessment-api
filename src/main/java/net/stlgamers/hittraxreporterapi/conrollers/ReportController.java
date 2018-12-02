@@ -27,10 +27,10 @@ public class ReportController {
     }
 
     @PostMapping
-    public ResponseEntity<ReportAddedResponse> addReport(@RequestBody AddReportRequest request) throws IOException {
-        ReportAddedResponse response = reportService.addReport(request);
+    public ResponseEntity<Report> addReport(@RequestBody AddReportRequest request) throws IOException {
+        Report response = reportService.addReport(request);
 
-        return ResponseEntity.created(URI.create("report/" + response.getReportId())).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
