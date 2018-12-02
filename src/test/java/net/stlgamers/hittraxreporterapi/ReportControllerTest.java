@@ -31,16 +31,16 @@ public class ReportControllerTest {
         this.reportController = new ReportController(reportService);
     }
 
-    @Test
-    public void givenCSVFile_whenCSVFormatValid_respondWithData() throws IOException {
-        String testReport = "csv file";
-        AddReportRequest testRequest = new AddReportRequest();
-        testRequest.setReport(testReport);
-
-        Mockito.when(reportService.addReport(testRequest)).thenReturn(new ReportAddedResponse());
-
-        ResponseEntity<ReportAddedResponse> actualResponse = reportController.addReport(testRequest);
-
-        Assert.assertEquals(actualResponse.getStatusCode(), HttpStatus.CREATED);
-    }
+//    @Test
+//    public void givenCSVFile_whenCSVFormatValid_respondWithData() throws IOException {
+//        String testReport = "csv file";
+//        AddReportRequest testRequest = new AddReportRequest();
+//        testRequest.setReport(testReport);
+//
+//        Mockito.when(reportService.addReport(testRequest)).thenReturn(new ReportAddedResponse());
+//
+//        ResponseEntity<ReportAddedResponse> actualResponse = reportController.addReport(testRequest);
+//
+//        Assert.assertEquals(actualResponse.getStatusCode(), HttpStatus.CREATED);
+//    }
 }
