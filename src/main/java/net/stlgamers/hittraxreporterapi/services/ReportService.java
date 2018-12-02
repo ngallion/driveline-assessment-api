@@ -4,14 +4,16 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
-import net.stlgamers.hittraxreporterapi.http.ExitVeloVsLaunchAngleResult;
-import net.stlgamers.hittraxreporterapi.http.ReportAddedResponse;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChartDataResult;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
 import net.stlgamers.hittraxreporterapi.models.AtBatCsv;
 import net.stlgamers.hittraxreporterapi.models.Report;
 import net.stlgamers.hittraxreporterapi.models.Session;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
 import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
+import net.stlgamers.hittraxreporterapi.services.SessionService.AngleRange;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,25 +52,37 @@ public class ReportService {
     }
 
     public Report getReport(List<Long> request) {
-        Report report = new Report();
+        List<AtBat> atBats = sessionService.getAllAtBatsAbove50EVForAllSessionsById(request);
 
-        report.setAvgExitVelocity(sessionService.getAvgExitVelocity(request));
-        report.setMaxExitVelocity(sessionService.getMaxExitVelocity(request));
-        Long numberOfGroundBalls = sessionService.getNumberResultType(request, "GB");
-        Long numberOfFlyBalls = sessionService.getNumberResultType(request, "FB");
-        Long numberOfLineDrives = sessionService.getNumberResultType(request, "LD");
-        Long total = numberOfFlyBalls + numberOfGroundBalls + numberOfLineDrives;
-        Double percentGroundBalls = ((double)numberOfGroundBalls/(double) total) * 100;
-        Double percentFlyBalls = ((double)numberOfFlyBalls/(double) total) * 100;
-        Double percentLineDrives = ((double)numberOfLineDrives/(double) total) * 100;
-        report.setGroundBallPercentage(percentGroundBalls.toString().substring(0, 4));
-        report.setFlyBallPercentage(percentFlyBalls.toString().substring(0, 4));
-        report.setLineDrivePercentage(percentLineDrives.toString().substring(0, 4));
-        report.setExitVeloVsLaunchAngle(getExitVeloVsLaunchAngleSet(request));
+        Report report = generateReport(atBats);
 
         return report;
     }
 
+    public Report generateReport(List<AtBat> atBats) {
+        Report report = new Report();
+
+        report.setAvgExitVelocity(sessionService.getAvgExitVelocity(atBats));
+        report.setMaxExitVelocity(sessionService.getMaxExitVelocity(atBats));
+
+        Long numberOfGroundBalls = sessionService.getNumberResultType(atBats, "GB");
+        Long numberOfFlyBalls = sessionService.getNumberResultType(atBats, "FB");
+        Long numberOfLineDrives = sessionService.getNumberResultType(atBats, "LD");
+        Long total = numberOfFlyBalls + numberOfGroundBalls + numberOfLineDrives;
+
+        Double percentGroundBalls = ((double)numberOfGroundBalls/(double) total) * 100;
+        Double percentFlyBalls = ((double)numberOfFlyBalls/(double) total) * 100;
+        Double percentLineDrives = ((double)numberOfLineDrives/(double) total) * 100;
+
+        report.setGroundBallPercentage(percentGroundBalls.toString().substring(0, 4));
+        report.setFlyBallPercentage(percentFlyBalls.toString().substring(0, 4));
+        report.setLineDrivePercentage(percentLineDrives.toString().substring(0, 4));
+        report.setExitVeloVsLaunchAngle(getExitVeloVsLaunchAngleSet(atBats));
+
+        report.setSprayChart(generateSprayChart(atBats));
+
+        return report;
+    }
 
     public List<AtBatCsv> createListOfAtBatsFromCsvString(String csvString) throws IOException{
         CsvMapper mapper = new CsvMapper();
@@ -91,18 +105,31 @@ public class ReportService {
 
     }
 
-    public List<ExitVeloVsLaunchAngleResult> getExitVeloVsLaunchAngleSet(List<Long> sessionIds) {
+    public List<ExitVeloVsLaunchAngleResult> getExitVeloVsLaunchAngleSet(List<AtBat> atBats) {
         List<ExitVeloVsLaunchAngleResult> set = Arrays.asList(
-                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, -50, -10),
-                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, -10, 0),
-                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 0, 10),
-                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 10, 20),
-                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 20, 30),
-                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 30, 40),
-                sessionService.getResultOfExitVeloVsLaunchAngle(sessionIds, 40, 100)
+                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, -50, -10),
+                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, -10, 0),
+                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 0, 10),
+                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 10, 20),
+                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 20, 30),
+                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 30, 40),
+                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 40, 100)
         );
 
         return set;
+    }
+
+    public SprayChart generateSprayChart(List<AtBat> atBats) {
+
+        AngleRange leftAngle = new AngleRange(-45, -15);
+        AngleRange centerAngle = new AngleRange(-15, 15);
+        AngleRange rightAngle = new AngleRange(15, 45);
+
+        SprayChartDataResult left = sessionService.getSprayChartDataResult(atBats, leftAngle);
+        SprayChartDataResult center = sessionService.getSprayChartDataResult(atBats, centerAngle);
+        SprayChartDataResult right = sessionService.getSprayChartDataResult(atBats, rightAngle);
+
+        return new SprayChart(left, center, right);
     }
 
     public Session saveSessionToDatabase(List<AtBat> atBats) {

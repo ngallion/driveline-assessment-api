@@ -1,4 +1,4 @@
-package net.stlgamers.hittraxreporterapi.http;
+package net.stlgamers.hittraxreporterapi.http.reportComponents;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

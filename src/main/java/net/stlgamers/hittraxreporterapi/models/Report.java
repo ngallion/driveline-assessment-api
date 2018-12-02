@@ -1,7 +1,8 @@
 package net.stlgamers.hittraxreporterapi.models;
 
 import lombok.Data;
-import net.stlgamers.hittraxreporterapi.http.ExitVeloVsLaunchAngleResult;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
 
 import java.util.List;
 
@@ -16,5 +17,6 @@ public class Report {
     private String flyBallPercentage;
     private String lineDrivePercentage;
     private List<ExitVeloVsLaunchAngleResult> exitVeloVsLaunchAngle;
+    private SprayChart sprayChart;
 
 }

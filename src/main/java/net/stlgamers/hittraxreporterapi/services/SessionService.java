@@ -1,6 +1,10 @@
 package net.stlgamers.hittraxreporterapi.services;
 
-import net.stlgamers.hittraxreporterapi.http.ExitVeloVsLaunchAngleResult;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChartDataResult;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
 import net.stlgamers.hittraxreporterapi.models.Session;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
@@ -25,22 +29,18 @@ public class SessionService {
         this.atBatRepository = atBatRepository;
     }
 
-    public Double getAvgExitVelocity(List<Long> sessionIds) {
-
-        List<AtBat> atBats = getAllAtBatsAbove50EVForAllSessionsById(sessionIds);
+    public Double getAvgExitVelocity(List<AtBat> atBats) {
 
         Double avgExitVelo = atBats
                 .stream()
-                .map(atBat -> atBat.getExitVelocity())
+                .map(AtBat::getExitVelocity)
                 .reduce(new Averager(), Averager::accept, Averager::combine)
                 .average();
 
         return avgExitVelo;
     }
 
-    public Integer getMaxExitVelocity(List<Long> sessionIds) {
-
-        List<AtBat> atBats = getAllAtBatsAbove50EVForAllSessionsById(sessionIds);
+    public Integer getMaxExitVelocity(List<AtBat> atBats) {
 
         List<Integer> allExitVelocity = atBats
                 .stream()
@@ -51,9 +51,7 @@ public class SessionService {
         return allExitVelocity.get(allExitVelocity.size() - 1);
     }
 
-    public Integer getNumberOfHits(List<Long> sessionIds) {
-        List<AtBat> atBats = getAllAtBatsAbove50EVForAllSessionsById(sessionIds);
-
+    public Integer getNumberOfHits(List<AtBat> atBats) {
         List<String> allHits = atBats
                 .stream()
                 .map(AtBat::getResult)
@@ -64,14 +62,41 @@ public class SessionService {
 
     }
 
-    public Long getNumberResultType(List<Long> sessionIds, String resultType) {
-        List<AtBat> atBats = getAllAtBatsAbove50EVForAllSessionsById(sessionIds);
-
+    public Long getNumberResultType(List<AtBat> atBats, String resultType) {
         return atBats
                 .stream()
                 .map(AtBat::getType)
                 .filter(result -> result.trim().equals(resultType))
                 .count();
+    }
+
+    public SprayChartDataResult getSprayChartDataResult(List<AtBat> atBats, AngleRange angleRange) {
+        List<AtBat> atBatsInRange = atBats
+                .stream()
+                .filter(atBat ->
+                        atBat.getHorizontalAngle() > angleRange.getLowerLimit()
+                                && atBat.getHorizontalAngle() < angleRange.getUpperLimit())
+                .collect(Collectors.toList());
+
+        Double avgExitVelocity = getAvgExitVelocity(atBatsInRange);
+        Double avgVertAngle = getAvgVertAngle(atBatsInRange);
+        Double percentInRange = (double) atBatsInRange.size() / atBats.size() * 100;
+
+        String direction =
+                angleRange.getUpperLimit() == -15 ? "Left" :
+                        angleRange.getUpperLimit() == 15 ? "Middle"
+                                : "Right";
+
+        return new SprayChartDataResult(direction, percentInRange.toString(),
+                avgExitVelocity.toString(), avgVertAngle.toString());
+    }
+
+    public Double getAvgVertAngle(List<AtBat> atBats) {
+        return atBats
+                .stream()
+                .map(AtBat::getVerticalAngle)
+                .reduce(new Averager(), Averager::accept, Averager::combine)
+                .average();
     }
 
     public List<AtBat> getAllAtBatsForAllSessionsById(List<Long> sessionIds) {
@@ -96,10 +121,9 @@ public class SessionService {
         return filteredAtBats;
     }
 
-    public ExitVeloVsLaunchAngleResult getResultOfExitVeloVsLaunchAngle(List<Long> sessionIds, Integer lowerLimit, Integer upperLimit) {
-        List<AtBat> totalResults = getAllAtBatsAbove50EVForAllSessionsById(sessionIds);
+    public ExitVeloVsLaunchAngleResult getResultOfExitVeloVsLaunchAngle(List<AtBat> atBats, Integer lowerLimit, Integer upperLimit) {
 
-        List<AtBat> atBatsInRange = totalResults
+        List<AtBat> atBatsInRange = atBats
                 .stream()
                 .filter(result -> result.getVerticalAngle() != null && result.getVerticalAngle() > lowerLimit && result.getVerticalAngle() < upperLimit)
                 .collect(Collectors.toList());
@@ -121,10 +145,17 @@ public class SessionService {
                 .stream()
                 .reduce(new Averager(), Averager::accept, Averager::combine)
                 .average();
-        Double percentOfResults = ((double) allSortedExitVelocity.size() / totalResults.size() * 100);
+        Double percentOfResults = ((double) allSortedExitVelocity.size() / atBats.size() * 100);
 
         return new ExitVeloVsLaunchAngleResult(range, maxExitVelocity.toString(),
                 avgExitVelocity.toString(), percentOfResults.toString());
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class AngleRange {
+        private Integer lowerLimit;
+        private Integer upperLimit;
     }
 
     static class Averager {
