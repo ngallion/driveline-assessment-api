@@ -145,7 +145,7 @@ public class SessionService {
                 .stream()
                 .reduce(new Averager(), Averager::accept, Averager::combine)
                 .average();
-        Double percentOfResults = ((double) allSortedExitVelocity.size() / atBats.size() * 100);
+        Double percentOfResults = (((double) allSortedExitVelocity.size() / atBats.size()) * 100);
 
         return new ExitVeloVsLaunchAngleResult(range, maxExitVelocity.toString(),
                 avgExitVelocity.toString(), percentOfResults.toString());
