@@ -12,6 +12,7 @@ import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -149,6 +150,10 @@ public class SessionService {
 
         return new ExitVeloVsLaunchAngleResult(range, maxExitVelocity.toString(),
                 avgExitVelocity.toString(), percentOfResults.toString());
+    }
+
+    public List<Long> getAtBatsInDateRange(String playerName, LocalDateTime firstDay, LocalDateTime lastDay) {
+        return atBatRepository.findSessionIdsByPlayerInDateRange(playerName, firstDay, lastDay);
     }
 
     @Data

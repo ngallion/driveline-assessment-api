@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -105,6 +106,10 @@ public class ReportService {
 
     }
 
+    public List<Long> getSessionIdsInDateRange(String player, LocalDateTime start, LocalDateTime end) {
+        return sessionService.getAtBatsInDateRange(player, start, end);
+    }
+
     public List<ExitVeloVsLaunchAngleResult> getExitVeloVsLaunchAngleSet(List<AtBat> atBats) {
         List<ExitVeloVsLaunchAngleResult> set = Arrays.asList(
                 sessionService.getResultOfExitVeloVsLaunchAngle(atBats, -50, -10),
@@ -138,5 +143,9 @@ public class ReportService {
         List<AtBat> savedAtBats = atBatRepository.saveAll(atBats);
         
         return session;
+    }
+
+    public List<String> getAllPlayerNames() {
+        return atBatRepository.findAllDistinctPlayerNames();
     }
 }
