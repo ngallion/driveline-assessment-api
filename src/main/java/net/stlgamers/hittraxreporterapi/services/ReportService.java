@@ -14,6 +14,7 @@ import net.stlgamers.hittraxreporterapi.services.SessionService.AngleRange;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -52,6 +53,9 @@ public class ReportService {
 
     public Report getReport(List<Long> request) {
         List<AtBat> atBats = sessionService.getAllAtBatsForAllSessionsById(request);
+        if (atBats.size() == 0) {
+            throw new IllegalArgumentException("No sessions found for player within date range");
+        }
 
         Report report = generateReport(atBats);
 

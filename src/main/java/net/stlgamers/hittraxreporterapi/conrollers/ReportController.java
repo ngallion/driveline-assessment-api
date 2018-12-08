@@ -5,6 +5,8 @@ import net.stlgamers.hittraxreporterapi.http.ReportAddedResponse;
 import net.stlgamers.hittraxreporterapi.models.Report;
 import net.stlgamers.hittraxreporterapi.services.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -63,6 +65,12 @@ public class ReportController {
     @GetMapping("/player")
     public ResponseEntity<List<String>> getPlayerNames() {
         return ResponseEntity.status(HttpStatus.OK).body(reportService.getAllPlayerNames());
+    }
+
+    @ExceptionHandler(value = {IllegalArgumentException.class})
+    public ResponseEntity<Object> reportDoesNotExistHandler(IllegalArgumentException e) {
+        return new ResponseEntity<>(
+                e.getMessage(), new HttpHeaders(), HttpStatus.NOT_FOUND);
     }
 
 }
