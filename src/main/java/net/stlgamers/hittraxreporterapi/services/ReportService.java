@@ -7,10 +7,7 @@ import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChartDataResult;
-import net.stlgamers.hittraxreporterapi.models.AtBat;
-import net.stlgamers.hittraxreporterapi.models.AtBatCsv;
-import net.stlgamers.hittraxreporterapi.models.Report;
-import net.stlgamers.hittraxreporterapi.models.Session;
+import net.stlgamers.hittraxreporterapi.models.*;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
 import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import net.stlgamers.hittraxreporterapi.services.SessionService.AngleRange;
@@ -23,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class ReportService {
@@ -53,7 +51,7 @@ public class ReportService {
     }
 
     public Report getReport(List<Long> request) {
-        List<AtBat> atBats = sessionService.getAllAtBatsAbove50EVForAllSessionsById(request);
+        List<AtBat> atBats = sessionService.getAllAtBatsForAllSessionsById(request);
 
         Report report = generateReport(atBats);
 
@@ -63,12 +61,17 @@ public class ReportService {
     public Report generateReport(List<AtBat> atBats) {
         Report report = new Report();
 
-        report.setAvgExitVelocity(sessionService.getAvgExitVelocity(atBats));
-        report.setMaxExitVelocity(sessionService.getMaxExitVelocity(atBats));
+        List<AtBat> atBatsAbove50Ev = atBats
+                .stream()
+                .filter(atBat -> atBat.getExitVelocity() > 50)
+                .collect(Collectors.toList());
 
-        Long numberOfGroundBalls = sessionService.getNumberResultType(atBats, "GB");
-        Long numberOfFlyBalls = sessionService.getNumberResultType(atBats, "FB");
-        Long numberOfLineDrives = sessionService.getNumberResultType(atBats, "LD");
+        report.setAvgExitVelocity(sessionService.getAvgExitVelocity(atBatsAbove50Ev));
+        report.setMaxExitVelocity(sessionService.getMaxExitVelocity(atBatsAbove50Ev));
+
+        Long numberOfGroundBalls = sessionService.getNumberResultType(atBatsAbove50Ev, "GB");
+        Long numberOfFlyBalls = sessionService.getNumberResultType(atBatsAbove50Ev, "FB");
+        Long numberOfLineDrives = sessionService.getNumberResultType(atBatsAbove50Ev, "LD");
         Long total = numberOfFlyBalls + numberOfGroundBalls + numberOfLineDrives;
 
         Double percentGroundBalls = ((double)numberOfGroundBalls/(double) total) * 100;
@@ -78,11 +81,24 @@ public class ReportService {
         report.setGroundBallPercentage(percentGroundBalls.toString().substring(0, 4));
         report.setFlyBallPercentage(percentFlyBalls.toString().substring(0, 4));
         report.setLineDrivePercentage(percentLineDrives.toString().substring(0, 4));
-        report.setExitVeloVsLaunchAngle(getExitVeloVsLaunchAngleSet(atBats));
+        report.setExitVeloVsLaunchAngle(getExitVeloVsLaunchAngleSet(atBatsAbove50Ev));
 
-        report.setSprayChart(generateSprayChart(atBats));
+        report.setSprayChart(generateSprayChart(atBatsAbove50Ev));
+
+        report.setStrikeZoneData(generateStrikeZoneData(atBats));
 
         return report;
+    }
+
+    public List<ZoneData> generateStrikeZoneData(List<AtBat> atBats) {
+        List<AtBat> filteredAtBats = atBats
+                .stream()
+                .filter(atBat -> atBat.getExitVelocity() > 0 && atBat.getVerticalAngle() != null)
+                .collect(Collectors.toList());
+
+        return IntStream.range(1, 15)
+                .mapToObj(zone -> new ZoneData(zone, filteredAtBats))
+                .collect(Collectors.toList());
     }
 
     public List<AtBatCsv> createListOfAtBatsFromCsvString(String csvString) throws IOException{
@@ -99,7 +115,7 @@ public class ReportService {
         AtBatCsvToEntityConverter converter = new AtBatCsvToEntityConverter();
         List<AtBat> allAtBats = csv
                 .stream()
-                .filter(element -> element.getVelo() != null && !element.getVelo().isEmpty() && (int) Double.parseDouble(element.getVelo()) > 50)
+                .filter(element -> element.getVelo() != null && !element.getVelo().isEmpty())
                 .map(converter::convert)
                 .collect(Collectors.toList());
         return allAtBats;

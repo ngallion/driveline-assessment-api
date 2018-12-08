@@ -18,5 +18,9 @@ public class Report {
     private String lineDrivePercentage;
     private List<ExitVeloVsLaunchAngleResult> exitVeloVsLaunchAngle;
     private SprayChart sprayChart;
+    private Double sluggingPercentage;
+    private Integer contactRate;
+    private Double ops;
+    private List<ZoneData> strikeZoneData;
 
 }
