@@ -2,10 +2,7 @@ package net.stlgamers.hittraxreporterapi;
 
 import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
 import net.stlgamers.hittraxreporterapi.http.ReportAddedResponse;
-import net.stlgamers.hittraxreporterapi.models.AtBat;
-import net.stlgamers.hittraxreporterapi.models.AtBatCsv;
-import net.stlgamers.hittraxreporterapi.models.Report;
-import net.stlgamers.hittraxreporterapi.models.ZoneData;
+import net.stlgamers.hittraxreporterapi.models.*;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
 import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import net.stlgamers.hittraxreporterapi.services.ReportService;

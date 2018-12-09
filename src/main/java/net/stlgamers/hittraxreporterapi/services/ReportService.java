@@ -12,6 +12,7 @@ import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
 import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import net.stlgamers.hittraxreporterapi.services.SessionService.AngleRange;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
+import net.stlgamers.hittraxreporterapi.util.AtBatToCsvToEntityConverterWithHashColumn;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +42,16 @@ public class ReportService {
     }
 
     public Report addReport(AddReportRequest request) throws IOException {
+
+        if (request.getReport().substring(0, 10).contains("#")) {
+            List<AtBatCsvWithHashColumn> atBatCsvs = createListOfAtBatsFromCsvWithHashCol(request.getReport());
+            List<AtBat> atBats = withHashconvertListOfAtBatFromAtBatCsv(atBatCsvs);
+            Session session = saveSessionToDatabase(atBats);
+
+            Report report = getReport(Arrays.asList(session.getId()));
+
+            return report;
+        }
 
         List<AtBatCsv> atBatCsvs = createListOfAtBatsFromCsvString(request.getReport());
         List<AtBat> atBats = convertListOfAtBatCSVToAtBatEntities(atBatCsvs);
@@ -181,8 +192,16 @@ public class ReportService {
         return all;
     }
 
-    public List<AtBat> convertListOfAtBatCSVToAtBatEntities(List<AtBatCsv> csv) {
+    public List<AtBatCsvWithHashColumn> createListOfAtBatsFromCsvWithHashCol(String csvString) throws IOException {
+        CsvMapper mapper = new CsvMapper();
+        CsvSchema schema = mapper.schemaFor(AtBatCsvWithHashColumn.class).withHeader();
+        MappingIterator<AtBatCsvWithHashColumn> it = mapper.readerFor(AtBatCsvWithHashColumn.class).with(schema)
+                .readValues(csvString);
+        List<AtBatCsvWithHashColumn> all = it.readAll();
+        return all;
+    }
 
+    public List<AtBat> convertListOfAtBatCSVToAtBatEntities(List<AtBatCsv> csv) {
         try{
             AtBatCsvToEntityConverter converter = new AtBatCsvToEntityConverter();
             List<AtBat> allAtBats = csv
@@ -194,9 +213,20 @@ public class ReportService {
         } catch (DateTimeParseException e) {
             throw e;
         }
+    }
 
-
-
+    public List<AtBat> withHashconvertListOfAtBatFromAtBatCsv(List<AtBatCsvWithHashColumn> csv) {
+        try{
+            AtBatToCsvToEntityConverterWithHashColumn converter = new AtBatToCsvToEntityConverterWithHashColumn();
+            List<AtBat> allAtBats = csv
+                    .stream()
+                    .filter(element -> element.getVelo() != null && !element.getVelo().isEmpty())
+                    .map(converter::convertForHashColumn)
+                    .collect(Collectors.toList());
+            return allAtBats;
+        } catch (DateTimeParseException e) {
+            throw e;
+        }
     }
 
     public List<Long> getSessionIdsInDateRange(String player, LocalDateTime start, LocalDateTime end) {
