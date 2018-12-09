@@ -14,7 +14,6 @@ import net.stlgamers.hittraxreporterapi.services.SessionService.AngleRange;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -88,11 +87,59 @@ public class ReportService {
         report.setExitVeloVsLaunchAngle(getExitVeloVsLaunchAngleSet(atBatsAbove50Ev));
 
         report.setSprayChart(generateSprayChart(atBatsAbove50Ev));
-
         report.setStrikeZoneData(generateStrikeZoneData(atBats));
-        report.setContactRate(calculateContactRate(atBats));
+
+        Double contactRate = calculateContactRate(atBats);
+        Double sluggingPercentage = calculateSluggingPercentage(atBats);
+
+        report.setContactRate(contactRate);
+        report.setSluggingPercentage(sluggingPercentage);
+        report.setOps(calculateOps(sluggingPercentage, contactRate));
 
         return report;
+    }
+
+    private Double calculateOps(Double slugging, Double contactRate) {
+        return (1.374 * slugging) + (0.411 * (contactRate/100));
+    }
+
+    private Integer getPointValue(AtBat atBat) {
+        if (atBat.getResult() == null) {
+            return 0;
+        }
+        if (atBat.getResult().length() < 3 && !atBat.getResult().toLowerCase().equals("hr")) {
+            return 0;
+        }
+        String result = atBat.getResult().trim().toLowerCase().substring(0, 2);
+        Integer value;
+        switch (result) {
+            case "1b": value = 1;
+            break;
+            case "2b": value = 2;
+            break;
+            case "3b": value = 3;
+            break;
+            case "hr": value = 4;
+            break;
+            default: value = 0;
+            break;
+        }
+        return value;
+    }
+
+    private Double calculateSluggingPercentage(List<AtBat> atBats) {
+
+        Integer totalPoints = atBats
+                .stream()
+                .map(this::getPointValue)
+                .reduce(0,(a, b) -> a + b);
+
+        Integer totalBallsInPlay = Math.toIntExact(atBats
+                .stream()
+                .filter(atBat -> atBat.getExitVelocity() > 50 && atBat.getPitchVelocity() > 50)
+                .count());
+
+        return ((double)totalPoints / (double)totalBallsInPlay);
     }
 
     private Double calculateContactRate(List<AtBat> atBats) {
