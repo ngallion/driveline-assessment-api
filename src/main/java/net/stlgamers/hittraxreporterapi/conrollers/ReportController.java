@@ -17,6 +17,7 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -71,6 +72,11 @@ public class ReportController {
     public ResponseEntity<Object> reportDoesNotExistHandler(IllegalArgumentException e) {
         return new ResponseEntity<>(
                 e.getMessage(), new HttpHeaders(), HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler({DateTimeParseException.class})
+    public ResponseEntity<Object> csvParseErrorHandler(DateTimeParseException e) {
+        return new ResponseEntity<>("Error reading csv file",
+                new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
 }

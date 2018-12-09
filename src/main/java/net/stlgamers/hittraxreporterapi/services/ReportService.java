@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -182,13 +183,19 @@ public class ReportService {
 
     public List<AtBat> convertListOfAtBatCSVToAtBatEntities(List<AtBatCsv> csv) {
 
-        AtBatCsvToEntityConverter converter = new AtBatCsvToEntityConverter();
-        List<AtBat> allAtBats = csv
-                .stream()
-                .filter(element -> element.getVelo() != null && !element.getVelo().isEmpty())
-                .map(converter::convert)
-                .collect(Collectors.toList());
-        return allAtBats;
+        try{
+            AtBatCsvToEntityConverter converter = new AtBatCsvToEntityConverter();
+            List<AtBat> allAtBats = csv
+                    .stream()
+                    .filter(element -> element.getVelo() != null && !element.getVelo().isEmpty())
+                    .map(converter::convert)
+                    .collect(Collectors.toList());
+            return allAtBats;
+        } catch (DateTimeParseException e) {
+            throw e;
+        }
+
+
 
     }
 
