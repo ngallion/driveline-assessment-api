@@ -12,9 +12,7 @@ public class AtBatCsvToEntityConverter {
         AtBat atBat = new AtBat();
 
         csv.replaceEmptyValuesWithNull();
-        System.out.println(csv);
 
-        atBat.setNumberOfSwing(Integer.parseInt(csv.getNumber()));
         atBat.setTimestamp(LocalDateTime.parse(csv.getDate().trim(), DateTimeFormatter.ofPattern("M/d/yyyy HH:mm:ss.SSS")));
         atBat.setSessionTime(csv.getTimeStamp());
         atBat.setPitchVelocity((int) Double.parseDouble(csv.getPitch()));

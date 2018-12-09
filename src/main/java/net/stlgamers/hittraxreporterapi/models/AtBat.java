@@ -17,7 +17,6 @@ public class AtBat {
     @JoinColumn(name="SESSION_ID")
     private Session session;
 
-    private Integer numberOfSwing;
     private LocalDateTime timestamp;
     private String sessionTime;
     private Integer pitchVelocity;
