@@ -90,8 +90,26 @@ public class ReportService {
         report.setSprayChart(generateSprayChart(atBatsAbove50Ev));
 
         report.setStrikeZoneData(generateStrikeZoneData(atBats));
+        report.setContactRate(calculateContactRate(atBats));
 
         return report;
+    }
+
+    private Double calculateContactRate(List<AtBat> atBats) {
+        Integer numberOfAtBatsWith50PlusEv = Math.toIntExact(atBats
+                .stream()
+                .filter(atBat -> atBat.getExitVelocity() > 50)
+                .count());
+
+        Integer numberOfPitchesInStrikeZone = Math.toIntExact(atBats
+                .stream()
+                .filter(atBat ->
+                        atBat.getStrikeZonePosition() != null
+                                && atBat.getStrikeZonePosition() > 0
+                                && atBat.getStrikeZonePosition() < 10)
+                .count());
+
+        return  ((double)numberOfAtBatsWith50PlusEv / (double)numberOfPitchesInStrikeZone) * 100;
     }
 
     public List<ZoneData> generateStrikeZoneData(List<AtBat> atBats) {

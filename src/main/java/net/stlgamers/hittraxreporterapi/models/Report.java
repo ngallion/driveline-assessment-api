@@ -19,7 +19,7 @@ public class Report {
     private List<ExitVeloVsLaunchAngleResult> exitVeloVsLaunchAngle;
     private SprayChart sprayChart;
     private Double sluggingPercentage;
-    private Integer contactRate;
+    private Double contactRate;
     private Double ops;
     private List<ZoneData> strikeZoneData;
 
