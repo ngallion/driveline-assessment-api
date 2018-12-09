@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 public class Report {
 
+    private String playerName;
     private Integer numberOfSwings;
     private Double avgExitVelocity;
     private Integer maxExitVelocity;

@@ -69,6 +69,7 @@ public class ReportService {
                 .filter(atBat -> atBat.getExitVelocity() > 50)
                 .collect(Collectors.toList());
 
+        report.setPlayerName(atBats.get(0).getUser());
         report.setAvgExitVelocity(sessionService.getAvgExitVelocity(atBatsAbove50Ev));
         report.setMaxExitVelocity(sessionService.getMaxExitVelocity(atBatsAbove50Ev));
 
