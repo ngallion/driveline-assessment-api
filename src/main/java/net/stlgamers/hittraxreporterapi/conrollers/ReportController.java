@@ -59,7 +59,7 @@ public class ReportController {
 
         List<Long> sessionIds= reportService.getSessionIdsInDateRange(user, startDate, endDate);
 
-        Report report = reportService.getReport((sessionIds));
+        Report report = reportService.getReport(sessionIds);
         return ResponseEntity.status(HttpStatus.OK).body(report);
     }
 
