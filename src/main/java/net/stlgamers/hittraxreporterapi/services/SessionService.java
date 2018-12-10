@@ -157,6 +157,23 @@ public class SessionService {
         return atBatRepository.findSessionIdsByPlayerInDateRange(playerName, firstDay, lastDay);
     }
 
+    public Double getEvStdDeviation(List<AtBat> atBats) {
+        Double average = atBats
+                .stream()
+                .mapToInt(AtBat::getExitVelocity)
+                .summaryStatistics()
+                .getAverage();
+
+        Double avgOfDifferenceOfMeanAndElements= atBats
+                .stream()
+                .mapToDouble(atBat -> Math.pow((atBat.getExitVelocity() - average), 2 ))
+                .summaryStatistics()
+                .getAverage();
+
+        return Math.sqrt(avgOfDifferenceOfMeanAndElements);
+
+    }
+
     @Data
     @AllArgsConstructor
     public static class AngleRange {

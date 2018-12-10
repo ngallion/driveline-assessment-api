@@ -13,6 +13,7 @@ public class Report {
     private Integer numberOfSwings;
     private Double avgExitVelocity;
     private Integer maxExitVelocity;
+    private Double evStdDeviation;
     private Float battingAverage;
     private String groundBallPercentage;
     private String flyBallPercentage;

@@ -84,6 +84,7 @@ public class ReportService {
         report.setPlayerName(atBats.get(0).getUser());
         report.setAvgExitVelocity(sessionService.getAvgExitVelocity(atBatsAbove50Ev));
         report.setMaxExitVelocity(sessionService.getMaxExitVelocity(atBatsAbove50Ev));
+        report.setEvStdDeviation(sessionService.getEvStdDeviation(atBatsAbove50Ev));
 
         Long numberOfGroundBalls = sessionService.getNumberResultType(atBatsAbove50Ev, "GB");
         Long numberOfFlyBalls = sessionService.getNumberResultType(atBatsAbove50Ev, "FB");
