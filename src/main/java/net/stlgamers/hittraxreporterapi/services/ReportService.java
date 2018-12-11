@@ -4,12 +4,11 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
-import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
-import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
-import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChartDataResult;
-import net.stlgamers.hittraxreporterapi.models.*;
+import net.stlgamers.hittraxreporterapi.models.AtBat;
+import net.stlgamers.hittraxreporterapi.models.AtBatCsv;
+import net.stlgamers.hittraxreporterapi.models.AtBatCsvWithHashColumn;
+import net.stlgamers.hittraxreporterapi.models.Report;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
-import net.stlgamers.hittraxreporterapi.services.SessionService.AngleRange;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
 import net.stlgamers.hittraxreporterapi.util.AtBatToCsvToEntityConverterWithHashColumn;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +17,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 public class ReportService {
@@ -29,11 +26,11 @@ public class ReportService {
     @Autowired
     private AtBatRepository atBatRepository;
 
-    private SessionService sessionService;
+    private StatService statService;
 
-    public ReportService(AtBatRepository atBatRepository, SessionService sessionService) {
+    public ReportService(AtBatRepository atBatRepository, StatService statService) {
         this.atBatRepository = atBatRepository;
-        this.sessionService = sessionService;
+        this.statService = statService;
     }
 
     public Report addReport(AddReportRequest request) throws IOException {
@@ -85,13 +82,17 @@ public class ReportService {
                 .collect(Collectors.toList());
 
         report.setPlayerName(atBats.get(0).getUser());
-        report.setAvgExitVelocity(sessionService.getAvgExitVelocity(atBatsAbove50Ev));
-        report.setMaxExitVelocity(sessionService.getMaxExitVelocity(atBatsAbove50Ev));
-        report.setEvStdDeviation(sessionService.getEvStdDeviation(atBatsAbove50Ev));
+        report.setAvgExitVelocity(statService.getAvgExitVelocity(atBatsAbove50Ev));
+        report.setMaxExitVelocity(statService.getMaxExitVelocity(atBatsAbove50Ev));
+        report.setEvStdDeviation(statService.getEvStdDeviation(atBatsAbove50Ev));
 
-        Long numberOfGroundBalls = sessionService.getNumberResultType(atBatsAbove50Ev, "GB");
-        Long numberOfFlyBalls = sessionService.getNumberResultType(atBatsAbove50Ev, "FB");
-        Long numberOfLineDrives = sessionService.getNumberResultType(atBatsAbove50Ev, "LD");
+        report.setAvgLaunchAngle(statService.getAvgVertAngle(atBatsAbove50Ev));
+        report.setAvgHhbLaunchAngle(statService.getAvgHhbLaunchAngle(atBatsAbove50Ev));
+        report.setLaStdDeviation(statService.getLaStdDeviation(atBatsAbove50Ev));
+
+        Long numberOfGroundBalls = statService.getNumberResultType(atBatsAbove50Ev, "GB");
+        Long numberOfFlyBalls = statService.getNumberResultType(atBatsAbove50Ev, "FB");
+        Long numberOfLineDrives = statService.getNumberResultType(atBatsAbove50Ev, "LD");
         Long total = numberOfFlyBalls + numberOfGroundBalls + numberOfLineDrives;
 
         Double percentGroundBalls = ((double)numberOfGroundBalls/(double) total) * 100;
@@ -101,91 +102,22 @@ public class ReportService {
         report.setGroundBallPercentage(percentGroundBalls.toString().substring(0, 4));
         report.setFlyBallPercentage(percentFlyBalls.toString().substring(0, 4));
         report.setLineDrivePercentage(percentLineDrives.toString().substring(0, 4));
-        report.setExitVeloVsLaunchAngle(getExitVeloVsLaunchAngleSet(atBatsAbove50Ev));
+        report.setExitVeloVsLaunchAngle(statService.getExitVeloVsLaunchAngleSet(atBatsAbove50Ev));
 
-        report.setSprayChart(generateSprayChart(atBatsAbove50Ev));
-        report.setStrikeZoneData(generateStrikeZoneData(atBats));
+        report.setSprayChart(statService.generateSprayChart(atBatsAbove50Ev));
+        report.setStrikeZoneData(statService.generateStrikeZoneData(atBats));
 
-        Double contactRate = calculateContactRate(atBats);
-        Double sluggingPercentage = calculateSluggingPercentage(atBats);
+        Double contactRate = statService.calculateContactRate(atBats);
+        Double sluggingPercentage = statService.calculateSluggingPercentage(atBats);
 
         report.setContactRate(contactRate);
         report.setSluggingPercentage(sluggingPercentage);
-        report.setOps(calculateOps(sluggingPercentage, contactRate));
+        report.setOps(statService.calculateOps(sluggingPercentage, contactRate));
 
         return report;
     }
 
-    private Double calculateOps(Double slugging, Double contactRate) {
-        return (1.374 * slugging) + (0.411 * (contactRate/100));
-    }
 
-    private Integer getPointValue(AtBat atBat) {
-        if (atBat.getResult() == null) {
-            return 0;
-        }
-        if (atBat.getResult().length() < 3 && !atBat.getResult().toLowerCase().equals("hr")) {
-            return 0;
-        }
-        String result = atBat.getResult().trim().toLowerCase().substring(0, 2);
-        Integer value;
-        switch (result) {
-            case "1b": value = 1;
-            break;
-            case "2b": value = 2;
-            break;
-            case "3b": value = 3;
-            break;
-            case "hr": value = 4;
-            break;
-            default: value = 0;
-            break;
-        }
-        return value;
-    }
-
-    private Double calculateSluggingPercentage(List<AtBat> atBats) {
-
-        Integer totalPoints = atBats
-                .stream()
-                .map(this::getPointValue)
-                .reduce(0,(a, b) -> a + b);
-
-        Integer totalBallsInPlay = Math.toIntExact(atBats
-                .stream()
-                .filter(atBat -> atBat.getExitVelocity() > 50 && atBat.getPitchVelocity() > 50)
-                .count());
-
-        return ((double)totalPoints / (double)totalBallsInPlay);
-    }
-
-    private Double calculateContactRate(List<AtBat> atBats) {
-        Integer numberOfAtBatsWith50PlusEv = Math.toIntExact(atBats
-                .stream()
-                .filter(atBat -> atBat.getExitVelocity() > 50)
-                .count());
-
-        Integer numberOfPitchesInStrikeZone = Math.toIntExact(atBats
-                .stream()
-                .filter(atBat ->
-                        atBat.getStrikeZonePosition() != null
-                                && atBat.getStrikeZonePosition() > 0
-                                && atBat.getStrikeZonePosition() < 10)
-                .count());
-
-        return  ((double)numberOfAtBatsWith50PlusEv / (double)numberOfPitchesInStrikeZone) * 100;
-    }
-
-    public List<ZoneData> generateStrikeZoneData(List<AtBat> atBats) {
-        List<AtBat> filteredAtBats = atBats
-                .stream()
-                .filter(atBat -> atBat.getExitVelocity() > 0 && atBat.getVerticalAngle() != null)
-                .collect(Collectors.toList());
-
-        return IntStream.range(1, 15)
-                .mapToObj(zone -> new ZoneData(zone, filteredAtBats))
-                .collect(Collectors.toList());
-    }
 
     public List<AtBatCsv> createListOfAtBatsFromCsvString(String csvString) throws IOException{
         CsvMapper mapper = new CsvMapper();
@@ -231,33 +163,6 @@ public class ReportService {
         } catch (DateTimeParseException e) {
             throw e;
         }
-    }
-
-    public List<ExitVeloVsLaunchAngleResult> getExitVeloVsLaunchAngleSet(List<AtBat> atBats) {
-        List<ExitVeloVsLaunchAngleResult> set = Arrays.asList(
-                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, -50, -10),
-                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, -10, 0),
-                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 0, 10),
-                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 10, 20),
-                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 20, 30),
-                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 30, 40),
-                sessionService.getResultOfExitVeloVsLaunchAngle(atBats, 40, 100)
-        );
-
-        return set;
-    }
-
-    public SprayChart generateSprayChart(List<AtBat> atBats) {
-
-        AngleRange leftAngle = new AngleRange(-45, -15);
-        AngleRange centerAngle = new AngleRange(-15, 15);
-        AngleRange rightAngle = new AngleRange(15, 45);
-
-        SprayChartDataResult left = sessionService.getSprayChartDataResult(atBats, leftAngle);
-        SprayChartDataResult center = sessionService.getSprayChartDataResult(atBats, centerAngle);
-        SprayChartDataResult right = sessionService.getSprayChartDataResult(atBats, rightAngle);
-
-        return new SprayChart(left, center, right);
     }
 
     public List<String> getAllPlayerNames() {

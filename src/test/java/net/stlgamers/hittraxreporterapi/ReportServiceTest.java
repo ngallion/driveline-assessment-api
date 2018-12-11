@@ -4,7 +4,7 @@ import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
 import net.stlgamers.hittraxreporterapi.models.*;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
 import net.stlgamers.hittraxreporterapi.services.ReportService;
-import net.stlgamers.hittraxreporterapi.services.SessionService;
+import net.stlgamers.hittraxreporterapi.services.StatService;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,11 +30,11 @@ public class ReportServiceTest {
     private AtBatRepository atBatRepository;
 
     @Mock
-    private SessionService sessionService;
+    private StatService statService;
 
     @Before
     public void setUp() {
-        this.reportService = new ReportService(atBatRepository, sessionService);
+        this.reportService = new ReportService(atBatRepository, statService);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class ReportServiceTest {
         AtBat atBat2 = generateTestAtBatByEvLaAndZone(20, 30, 1);
         List<AtBat> testAtBats = Arrays.asList(atBat1, atBat2);
 
-        List<ZoneData> actualZoneData = reportService.generateStrikeZoneData(testAtBats);
+        List<ZoneData> actualZoneData = statService.generateStrikeZoneData(testAtBats);
 
         List<ZoneData> actualPos1Data = actualZoneData
                 .stream()

@@ -14,6 +14,9 @@ public class Report {
     private Double avgExitVelocity;
     private Integer maxExitVelocity;
     private Double evStdDeviation;
+    private Double avgLaunchAngle;
+    private Double avgHhbLaunchAngle;
+    private Double laStdDeviation;
     private Float battingAverage;
     private String groundBallPercentage;
     private String flyBallPercentage;
