@@ -1,10 +1,8 @@
 package net.stlgamers.hittraxreporterapi;
 
 import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
-import net.stlgamers.hittraxreporterapi.http.ReportAddedResponse;
 import net.stlgamers.hittraxreporterapi.models.*;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
-import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import net.stlgamers.hittraxreporterapi.services.ReportService;
 import net.stlgamers.hittraxreporterapi.services.SessionService;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
@@ -17,8 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -31,9 +27,6 @@ public class ReportServiceTest {
     private ReportService reportService;
 
     @Mock
-    private SessionRepository sessionRepository;
-
-    @Mock
     private AtBatRepository atBatRepository;
 
     @Mock
@@ -41,7 +34,7 @@ public class ReportServiceTest {
 
     @Before
     public void setUp() {
-        this.reportService = new ReportService(sessionRepository, atBatRepository, sessionService);
+        this.reportService = new ReportService(atBatRepository, sessionService);
     }
 
     @Test

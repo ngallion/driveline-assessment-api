@@ -11,14 +11,10 @@ import java.util.List;
 
 @Repository
 public interface AtBatRepository extends JpaRepository<AtBat, Long> {
-    List<AtBat> findBySession(Session session);
-
-    @Query("SELECT DISTINCT(a.session.id) FROM AtBat a WHERE a.user = ?1 AND a.timestamp > ?2 AND a.timestamp < ?3")
-    List<Long> findSessionIdsByPlayerInDateRange(String player, LocalDateTime firstDay, LocalDateTime lastDay);
-
-//    @Query("SELECT COUNT(ab.result) FROM AtBat ab WHERE ab.sessionId = ?1 AND WHERE ab.result = ?2")
-//    Integer findNumberOfAtBatsBySessionAndResult(Long sessionId, String result);
 
     @Query("SELECT DISTINCT(a.user) FROM AtBat a")
     List<String> findAllDistinctPlayerNames();
+
+    @Query("SELECT a FROM AtBat a WHERE a.user = ?1 AND a.timestamp > ?2 AND a.timestamp < ?3")
+    List<AtBat> findAtBatsByPlayerInDateRange(String player, LocalDateTime firstDay, LocalDateTime lastDay);
 }

@@ -41,11 +41,6 @@ public class ReportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping
-    public ResponseEntity<Report> getReport(@RequestParam("sessionIds") List<Long> sessionIds) {
-        Report report = reportService.getReport(sessionIds);
-        return ResponseEntity.status(HttpStatus.OK).body(report);
-    }
     @GetMapping("/byDate")
     public ResponseEntity<Report> getReportByPlayerNameAndDateRange(@RequestParam("user") String user,
                                                                     @RequestParam("start") String start,
@@ -56,10 +51,7 @@ public class ReportController {
         LocalDateTime endDate = LocalDateTime
                 .of(LocalDate.parse(end, dateTimeFormatter), LocalDateTime.now().toLocalTime());
 
-
-        List<Long> sessionIds= reportService.getSessionIdsInDateRange(user, startDate, endDate);
-
-        Report report = reportService.getReport(sessionIds);
+        Report report = reportService.getReport(user, startDate, endDate);
         return ResponseEntity.status(HttpStatus.OK).body(report);
     }
 

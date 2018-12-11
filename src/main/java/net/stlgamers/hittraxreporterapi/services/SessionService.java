@@ -2,18 +2,14 @@ package net.stlgamers.hittraxreporterapi.services;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChartDataResult;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
-import net.stlgamers.hittraxreporterapi.models.Session;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
-import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import net.stlgamers.hittraxreporterapi.util.Averager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,13 +17,9 @@ import java.util.stream.Collectors;
 public class SessionService {
 
     @Autowired
-    private SessionRepository sessionRepository;
-
-    @Autowired
     private AtBatRepository atBatRepository;
 
-    public SessionService(SessionRepository sessionRepository, AtBatRepository atBatRepository) {
-        this.sessionRepository = sessionRepository;
+    public SessionService(AtBatRepository atBatRepository) {
         this.atBatRepository = atBatRepository;
     }
 
@@ -101,28 +93,6 @@ public class SessionService {
                 .average();
     }
 
-    public List<AtBat> getAllAtBatsForAllSessionsById(List<Long> sessionIds) {
-        List<Session> sessions = new ArrayList<>();
-        sessionIds.forEach(id -> sessions.add(sessionRepository.findById(id).get()));
-
-        List<AtBat> atBats = new ArrayList<>();
-        sessions.forEach(session -> atBats.addAll(atBatRepository.findBySession(session)));
-
-        return atBats;
-    }
-
-    public List<AtBat> getAllAtBatsAbove50EVForAllSessionsById(List<Long> sessionIds) {
-
-        List<AtBat> atBats = getAllAtBatsForAllSessionsById(sessionIds);
-
-        List<AtBat> filteredAtBats = atBats
-                .stream()
-                .filter(atBat -> atBat.getExitVelocity() > 50)
-                .collect(Collectors.toList());
-
-        return filteredAtBats;
-    }
-
     public ExitVeloVsLaunchAngleResult getResultOfExitVeloVsLaunchAngle(List<AtBat> atBats, Integer lowerLimit, Integer upperLimit) {
 
         List<AtBat> atBatsInRange = atBats
@@ -151,10 +121,6 @@ public class SessionService {
 
         return new ExitVeloVsLaunchAngleResult(range, maxExitVelocity.toString(),
                 avgExitVelocity.toString(), percentOfResults.toString());
-    }
-
-    public List<Long> getAtBatsInDateRange(String playerName, LocalDateTime firstDay, LocalDateTime lastDay) {
-        return atBatRepository.findSessionIdsByPlayerInDateRange(playerName, firstDay, lastDay);
     }
 
     public Double getEvStdDeviation(List<AtBat> atBats) {

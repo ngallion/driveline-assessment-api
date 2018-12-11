@@ -9,7 +9,6 @@ import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChartDataResult;
 import net.stlgamers.hittraxreporterapi.models.*;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
-import net.stlgamers.hittraxreporterapi.repositories.SessionRepository;
 import net.stlgamers.hittraxreporterapi.services.SessionService.AngleRange;
 import net.stlgamers.hittraxreporterapi.util.AtBatCsvToEntityConverter;
 import net.stlgamers.hittraxreporterapi.util.AtBatToCsvToEntityConverterWithHashColumn;
@@ -28,15 +27,11 @@ import java.util.stream.IntStream;
 public class ReportService {
 
     @Autowired
-    private SessionRepository sessionRepo;
-
-    @Autowired
     private AtBatRepository atBatRepository;
 
     private SessionService sessionService;
 
-    public ReportService(SessionRepository sessionRepo, AtBatRepository atBatRepository, SessionService sessionService) {
-        this.sessionRepo = sessionRepo;
+    public ReportService(AtBatRepository atBatRepository, SessionService sessionService) {
         this.atBatRepository = atBatRepository;
         this.sessionService = sessionService;
     }
@@ -46,31 +41,39 @@ public class ReportService {
         if (request.getReport().substring(0, 10).contains("#")) {
             List<AtBatCsvWithHashColumn> atBatCsvs = createListOfAtBatsFromCsvWithHashCol(request.getReport());
             List<AtBat> atBats = withHashconvertListOfAtBatFromAtBatCsv(atBatCsvs);
-            Session session = saveSessionToDatabase(atBats);
+            List<AtBat> savedAtBats = atBatRepository.saveAll(atBats);
 
-            Report report = getReport(Arrays.asList(session.getId()));
+            Report report = getReport(savedAtBats);
 
             return report;
         }
 
         List<AtBatCsv> atBatCsvs = createListOfAtBatsFromCsvString(request.getReport());
         List<AtBat> atBats = convertListOfAtBatCSVToAtBatEntities(atBatCsvs);
-        Session session = saveSessionToDatabase(atBats);
+        List<AtBat> savedAtBats = atBatRepository.saveAll(atBats);
 
-        Report report = getReport(Arrays.asList(session.getId()));
+        Report report = getReport(savedAtBats);
 
         return report;
     }
 
-    public Report getReport(List<Long> request) {
-        List<AtBat> atBats = sessionService.getAllAtBatsForAllSessionsById(request);
+    public Report getReport(String user, LocalDateTime startDate, LocalDateTime endDate) {
+        List<AtBat> atBats = atBatRepository.findAtBatsByPlayerInDateRange(user, startDate, endDate);
+
         if (atBats.size() == 0) {
             throw new IllegalArgumentException("No sessions found for player within date range");
         }
 
-        Report report = generateReport(atBats);
+        return generateReport(atBats);
+    }
 
-        return report;
+    private Report getReport(List<AtBat> atBats) {
+
+        if (atBats.size() == 0) {
+            throw new IllegalArgumentException("No sessions found for player within date range");
+        }
+
+        return generateReport(atBats);
     }
 
     public Report generateReport(List<AtBat> atBats) {
@@ -230,10 +233,6 @@ public class ReportService {
         }
     }
 
-    public List<Long> getSessionIdsInDateRange(String player, LocalDateTime start, LocalDateTime end) {
-        return sessionService.getAtBatsInDateRange(player, start, end);
-    }
-
     public List<ExitVeloVsLaunchAngleResult> getExitVeloVsLaunchAngleSet(List<AtBat> atBats) {
         List<ExitVeloVsLaunchAngleResult> set = Arrays.asList(
                 sessionService.getResultOfExitVeloVsLaunchAngle(atBats, -50, -10),
@@ -259,14 +258,6 @@ public class ReportService {
         SprayChartDataResult right = sessionService.getSprayChartDataResult(atBats, rightAngle);
 
         return new SprayChart(left, center, right);
-    }
-
-    public Session saveSessionToDatabase(List<AtBat> atBats) {
-        Session session = sessionRepo.save(new Session(atBats));
-        atBats.forEach(atBat -> atBat.setSession(session));
-        List<AtBat> savedAtBats = atBatRepository.saveAll(atBats);
-        
-        return session;
     }
 
     public List<String> getAllPlayerNames() {

@@ -13,10 +13,6 @@ public class AtBat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name="SESSION_ID")
-    private Session session;
-
     private LocalDateTime timestamp;
     private String sessionTime;
     private Integer pitchVelocity;
