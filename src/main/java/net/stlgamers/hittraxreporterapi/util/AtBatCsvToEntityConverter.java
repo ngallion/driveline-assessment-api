@@ -15,10 +15,10 @@ public class AtBatCsvToEntityConverter {
 
         atBat.setTimestamp(LocalDateTime.parse(csv.getDate().trim(), DateTimeFormatter.ofPattern("M/d/yyyy HH:mm:ss.SSS")));
         atBat.setSessionTime(csv.getTimeStamp());
-        atBat.setPitchVelocity((int) Double.parseDouble(csv.getPitch()));
+        atBat.setPitchVelocity(Double.parseDouble(csv.getPitch()));
         atBat.setStrikeZonePosition(csv.getStrikeZone() == null ? null : Integer.parseInt(csv.getStrikeZone().trim()));
         atBat.setPitchType(csv.getPType());
-        atBat.setExitVelocity((int) Double.parseDouble(csv.getVelo()));
+        atBat.setExitVelocity(Double.parseDouble(csv.getVelo()));
         atBat.setVerticalAngle(csv.getLa() == null ? null : (int) Double.parseDouble(csv.getLa()));
         atBat.setDistance(csv.getDist() == null ? null : (int) Double.parseDouble(csv.getDist()));
         atBat.setResult(csv.getRes());

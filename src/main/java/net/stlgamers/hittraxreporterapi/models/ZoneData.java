@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 public class ZoneData {
     private Zone position;
     private Integer positionNumber;
-    private Integer avgExitVelocity;
+    private Double avgExitVelocity;
     private Integer avgLaunchAngle;
 
 
@@ -23,9 +23,9 @@ public class ZoneData {
         this.positionNumber = zone;
         this.avgExitVelocity = atBatsInZone
                 .stream()
-                .map(AtBat::getExitVelocity)
-                .collect(Collectors.averagingInt(Integer::intValue))
-                .intValue();
+                .mapToDouble(AtBat::getExitVelocity)
+                .summaryStatistics()
+                .getAverage();
         this.avgLaunchAngle = atBatsInZone
                 .stream()
                 .map(AtBat::getVerticalAngle)

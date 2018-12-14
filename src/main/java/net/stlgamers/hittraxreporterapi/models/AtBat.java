@@ -15,10 +15,10 @@ public class AtBat {
 
     private LocalDateTime timestamp;
     private String sessionTime;
-    private Integer pitchVelocity;
+    private Double pitchVelocity;
     private Integer strikeZonePosition;
     private String pitchType;
-    private Integer exitVelocity;
+    private Double exitVelocity;
     private Integer verticalAngle;
     private Integer distance;
     private String result;

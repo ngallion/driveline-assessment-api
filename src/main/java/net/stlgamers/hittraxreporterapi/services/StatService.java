@@ -30,16 +30,16 @@ public class StatService {
 
         Double avgExitVelo = atBats
                 .stream()
-                .map(AtBat::getExitVelocity)
-                .reduce(new Averager(), Averager::accept, Averager::combine)
-                .average();
+                .mapToDouble(AtBat::getExitVelocity)
+                .summaryStatistics()
+                .getAverage();
 
         return avgExitVelo;
     }
 
-    public Integer getMaxExitVelocity(List<AtBat> atBats) {
+    public Double getMaxExitVelocity(List<AtBat> atBats) {
 
-        List<Integer> allExitVelocity = atBats
+        List<Double> allExitVelocity = atBats
                 .stream()
                 .map(AtBat::getExitVelocity)
                 .sorted()
@@ -71,13 +71,13 @@ public class StatService {
         List<AtBat> atBatsInRange = atBats
                 .stream()
                 .filter(atBat ->
-                        atBat.getHorizontalAngle() > angleRange.getLowerLimit()
-                                && atBat.getHorizontalAngle() < angleRange.getUpperLimit())
+                        atBat.getHorizontalAngle() >= angleRange.getLowerLimit()
+                                && atBat.getHorizontalAngle() <= angleRange.getUpperLimit())
                 .collect(Collectors.toList());
 
         Double avgExitVelocity = getAvgExitVelocity(atBatsInRange);
         Double avgVertAngle = getAvgVertAngle(atBatsInRange);
-        Double percentInRange = (double) atBatsInRange.size() / atBats.size() * 100;
+        Double percentInRange = ((double) atBatsInRange.size() / atBats.size()) * 100;
 
         String direction =
                 angleRange.getUpperLimit() == -15 ? "Left" :
@@ -91,16 +91,23 @@ public class StatService {
     public Double getAvgVertAngle(List<AtBat> atBats) {
         return atBats
                 .stream()
-                .map(AtBat::getVerticalAngle)
-                .reduce(new Averager(), Averager::accept, Averager::combine)
-                .average();
+                .mapToInt(AtBat::getVerticalAngle)
+                .summaryStatistics()
+                .getAverage();
     }
 
     public ExitVeloVsLaunchAngleResult getResultOfExitVeloVsLaunchAngle(List<AtBat> atBats, Integer lowerLimit, Integer upperLimit) {
 
+        List<AtBat> ballsInPlay = atBats
+                .stream()
+                .filter(result -> result.getHorizontalAngle() > -45 && result.getHorizontalAngle() < 45)
+                .collect(Collectors.toList());
+
         List<AtBat> atBatsInRange = atBats
                 .stream()
-                .filter(result -> result.getVerticalAngle() != null && result.getVerticalAngle() > lowerLimit && result.getVerticalAngle() < upperLimit)
+                .filter(result ->
+                        result.getHorizontalAngle() > -45 && result.getHorizontalAngle() < 45 &&
+                        result.getVerticalAngle() >= lowerLimit && result.getVerticalAngle() < upperLimit)
                 .collect(Collectors.toList());
 
         String range = upperLimit ==
@@ -110,17 +117,23 @@ public class StatService {
             return new ExitVeloVsLaunchAngleResult(range, "N/A", "N/A", "0");
         }
 
-        List<Integer> allSortedExitVelocity = atBatsInRange.stream()
+        List<Double> allSortedExitVelocity = atBatsInRange.stream()
                 .map(AtBat::getExitVelocity)
                 .sorted()
                 .collect(Collectors.toList());
 
-        Integer maxExitVelocity = allSortedExitVelocity.get(allSortedExitVelocity.size() - 1);
+        Double maxExitVelocity = allSortedExitVelocity
+                .stream()
+                .mapToDouble(Double::doubleValue)
+                .max()
+                .getAsDouble();
         Double avgExitVelocity = allSortedExitVelocity
                 .stream()
-                .reduce(new Averager(), Averager::accept, Averager::combine)
-                .average();
-        Double percentOfResults = (((double) allSortedExitVelocity.size() / atBats.size()) * 100);
+                .mapToDouble(Double::doubleValue)
+                .summaryStatistics()
+                .getAverage();
+
+        Double percentOfResults = (((double) allSortedExitVelocity.size() / ballsInPlay.size()) * 100);
 
         return new ExitVeloVsLaunchAngleResult(range, maxExitVelocity.toString(),
                 avgExitVelocity.toString(), percentOfResults.toString());
@@ -129,7 +142,7 @@ public class StatService {
     public Double getEvStdDeviation(List<AtBat> atBats) {
         Double average = atBats
                 .stream()
-                .mapToInt(AtBat::getExitVelocity)
+                .mapToDouble(AtBat::getExitVelocity)
                 .summaryStatistics()
                 .getAverage();
 
@@ -187,26 +200,27 @@ public class StatService {
     }
 
     public Double calculateContactRate(List<AtBat> atBats) {
-        Integer numberOfAtBatsWith50PlusEv = Math.toIntExact(atBats
+        Integer numberOfAtBatsWith50PlusEvAndResult = Math.toIntExact(atBats
                 .stream()
-                .filter(atBat -> atBat.getExitVelocity() > 50)
+                .filter(atBat -> atBat.getExitVelocity() > 50.0 && atBat.getHorizontalAngle() > -45.0 && atBat.getHorizontalAngle() < 45.0)
                 .count());
 
         Integer numberOfPitchesInStrikeZone = Math.toIntExact(atBats
                 .stream()
                 .filter(atBat ->
-                        atBat.getStrikeZonePosition() != null
+                        (atBat.getStrikeZonePosition() != null
                                 && atBat.getStrikeZonePosition() > 0
-                                && atBat.getStrikeZonePosition() < 10)
+                                && atBat.getStrikeZonePosition() < 10) ||
+                                (atBat.getExitVelocity() > 50.0 && atBat.getHorizontalAngle() > -45.0 && atBat.getHorizontalAngle() < 45.0))
                 .count());
 
-        return  ((double)numberOfAtBatsWith50PlusEv / (double)numberOfPitchesInStrikeZone) * 100;
+        return  ((double)numberOfAtBatsWith50PlusEvAndResult / numberOfPitchesInStrikeZone) * 100;
     }
 
     public List<ZoneData> generateStrikeZoneData(List<AtBat> atBats) {
         List<AtBat> filteredAtBats = atBats
                 .stream()
-                .filter(atBat -> atBat.getExitVelocity() > 0 && atBat.getVerticalAngle() != null)
+                .filter(atBat -> atBat.getExitVelocity() > 50.0 && atBat.getVerticalAngle() != null)
                 .collect(Collectors.toList());
 
         return IntStream.range(1, 15)
@@ -216,7 +230,7 @@ public class StatService {
 
     public List<ExitVeloVsLaunchAngleResult> getExitVeloVsLaunchAngleSet(List<AtBat> atBats) {
         List<ExitVeloVsLaunchAngleResult> set = Arrays.asList(
-                getResultOfExitVeloVsLaunchAngle(atBats, -50, -10),
+                getResultOfExitVeloVsLaunchAngle(atBats, -100, -10),
                 getResultOfExitVeloVsLaunchAngle(atBats, -10, 0),
                 getResultOfExitVeloVsLaunchAngle(atBats, 0, 10),
                 getResultOfExitVeloVsLaunchAngle(atBats, 10, 20),
@@ -230,13 +244,18 @@ public class StatService {
 
     public SprayChart generateSprayChart(List<AtBat> atBats) {
 
+        List<AtBat> ballsInRange = atBats
+                .stream()
+                .filter(atBat -> atBat.getHorizontalAngle() >= -45 && atBat.getHorizontalAngle() <= 45)
+                .collect(Collectors.toList());
+
         AngleRange leftAngle = new AngleRange(-45, -15);
         AngleRange centerAngle = new AngleRange(-15, 15);
         AngleRange rightAngle = new AngleRange(15, 45);
 
-        SprayChartDataResult left = getSprayChartDataResult(atBats, leftAngle);
-        SprayChartDataResult center = getSprayChartDataResult(atBats, centerAngle);
-        SprayChartDataResult right = getSprayChartDataResult(atBats, rightAngle);
+        SprayChartDataResult left = getSprayChartDataResult(ballsInRange, leftAngle);
+        SprayChartDataResult center = getSprayChartDataResult(ballsInRange, centerAngle);
+        SprayChartDataResult right = getSprayChartDataResult(ballsInRange, rightAngle);
 
         return new SprayChart(left, center, right);
     }

@@ -78,7 +78,7 @@ public class ReportService {
 
         List<AtBat> atBatsAbove50Ev = atBats
                 .stream()
-                .filter(atBat -> atBat.getExitVelocity() > 50)
+                .filter(atBat -> atBat.getExitVelocity() >= 50.0)
                 .collect(Collectors.toList());
 
         report.setPlayerName(atBats.get(0).getUser());
@@ -142,7 +142,6 @@ public class ReportService {
             AtBatCsvToEntityConverter converter = new AtBatCsvToEntityConverter();
             List<AtBat> allAtBats = csv
                     .stream()
-                    .filter(element -> element.getVelo() != null && !element.getVelo().isEmpty())
                     .map(converter::convert)
                     .collect(Collectors.toList());
             return allAtBats;
@@ -156,7 +155,6 @@ public class ReportService {
             AtBatToCsvToEntityConverterWithHashColumn converter = new AtBatToCsvToEntityConverterWithHashColumn();
             List<AtBat> allAtBats = csv
                     .stream()
-                    .filter(element -> element.getVelo() != null && !element.getVelo().isEmpty())
                     .map(converter::convertForHashColumn)
                     .collect(Collectors.toList());
             return allAtBats;

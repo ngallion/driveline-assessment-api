@@ -72,8 +72,8 @@ public class ReportServiceTest {
 
     @Test
     public void givenAtBats_whenGenerateStrikeZoneData_thenStrikeZoneDataGenerated() {
-        AtBat atBat1 = generateTestAtBatByEvLaAndZone(10, 10, 1);
-        AtBat atBat2 = generateTestAtBatByEvLaAndZone(20, 30, 1);
+        AtBat atBat1 = generateTestAtBatByEvLaAndZone(10.0, 10, 1);
+        AtBat atBat2 = generateTestAtBatByEvLaAndZone(20.0, 30, 1);
         List<AtBat> testAtBats = Arrays.asList(atBat1, atBat2);
 
         List<ZoneData> actualZoneData = statService.generateStrikeZoneData(testAtBats);
@@ -87,7 +87,7 @@ public class ReportServiceTest {
         Assert.assertEquals(java.util.Optional.of(20).get(), actualPos1Data.get(0).getAvgLaunchAngle());
     }
 
-    private AtBat generateTestAtBatByEvLaAndZone(Integer ev, Integer la, Integer zone) {
+    private AtBat generateTestAtBatByEvLaAndZone(Double ev, Integer la, Integer zone) {
         AtBat atBat = new AtBat();
         atBat.setExitVelocity(ev);
         atBat.setVerticalAngle(la);
