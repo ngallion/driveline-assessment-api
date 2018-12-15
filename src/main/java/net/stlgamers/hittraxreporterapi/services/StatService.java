@@ -2,9 +2,7 @@ package net.stlgamers.hittraxreporterapi.services;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
-import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
-import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChartDataResult;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.*;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
 import net.stlgamers.hittraxreporterapi.models.ZoneData;
 import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
@@ -68,10 +66,11 @@ public class StatService {
     }
 
     public SprayChartDataResult getSprayChartDataResult(List<AtBat> atBats, AngleRange angleRange) {
+
         List<AtBat> atBatsInRange = atBats
                 .stream()
                 .filter(atBat ->
-                        atBat.getHorizontalAngle() >= angleRange.getLowerLimit()
+                        atBat.getHorizontalAngle() > angleRange.getLowerLimit()
                                 && atBat.getHorizontalAngle() <= angleRange.getUpperLimit())
                 .collect(Collectors.toList());
 
@@ -246,10 +245,10 @@ public class StatService {
 
         List<AtBat> ballsInRange = atBats
                 .stream()
-                .filter(atBat -> atBat.getHorizontalAngle() >= -45 && atBat.getHorizontalAngle() <= 45)
+                .filter(atBat -> atBat.getHorizontalAngle() > -46 && atBat.getHorizontalAngle() <= 45)
                 .collect(Collectors.toList());
 
-        AngleRange leftAngle = new AngleRange(-45, -15);
+        AngleRange leftAngle = new AngleRange(-46, -15);
         AngleRange centerAngle = new AngleRange(-15, 15);
         AngleRange rightAngle = new AngleRange(15, 45);
 
@@ -282,6 +281,51 @@ public class StatService {
                 .getAverage();
 
         return Math.sqrt(avgOfDifferenceOfMeanAndElements);
+    }
+
+    public List<Poi> generatePoiDataList(List<AtBat> atBats) {
+
+        List<PositionRange> positionRanges = Arrays.asList(
+                new PositionRange(null, 18.0),
+                new PositionRange(18.0, 12.0),
+                new PositionRange(12.0, 6.0),
+                new PositionRange(6.0, 0.0),
+                new PositionRange(0.0, -6.0),
+                new PositionRange(-6.0, -12.0),
+                new PositionRange(-12.0, null)
+        );
+
+        List<AtBat> ballsInPlay = atBats
+                .stream()
+                .filter(atBat ->
+                        atBat.getHorizontalAngle() > -45 && atBat.getHorizontalAngle() < 45
+                                && !(atBat.getPoiX() == 0.0 && atBat.getPoiY() == 0.0 && atBat.getPoiZ() == 0.0))
+                .collect(Collectors.toList());
+
+        return positionRanges
+                .stream()
+                .map(positionRange -> generateRangeData(ballsInPlay, positionRange))
+                .collect(Collectors.toList());
+    }
+
+    public Poi generateRangeData(List<AtBat> ballsInPlay, PositionRange positionRange) {
+
+        Double upperBound = positionRange.getUpperBound();
+        Double lowerBound = positionRange.getLowerBound();
+
+        List<AtBat> atBatsInRange = ballsInPlay
+                .stream()
+                .filter(atBat -> {
+                    Double position = atBat.getPoiZ() - 17.0;
+                    return upperBound == null ? position >= 18 :
+                            lowerBound == null ? position < -18.0 :
+                                    position < upperBound && position >= lowerBound;
+                })
+                .collect(Collectors.toList());
+
+        Double avgEv = getAvgExitVelocity(atBatsInRange);
+        Double percentBallsInPlay = ((double) atBatsInRange.size() / ballsInPlay.size()) * 100;
+        return new Poi(positionRange, avgEv, percentBallsInPlay);
     }
 
     @Data

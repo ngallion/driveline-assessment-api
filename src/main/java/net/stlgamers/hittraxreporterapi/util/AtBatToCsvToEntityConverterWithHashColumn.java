@@ -35,9 +35,9 @@ public class AtBatToCsvToEntityConverterWithHashColumn {
         atBat.setStrikeZoneWidth((int) Double.parseDouble(csv.getStrikeZoneWidth().trim()));
         atBat.setVerticalDistance((int) Double.parseDouble(csv.getVerticalDistance().trim()));
         atBat.setHorizontalDistance((int) Double.parseDouble(csv.getHorizontalDistance().trim()));
-        atBat.setPoiX((int) Double.parseDouble(csv.getPoiX().trim()));
-        atBat.setPoiY((int) Double.parseDouble(csv.getPoiY().trim()));
-        atBat.setPoiZ((int) Double.parseDouble(csv.getPoiZ().trim()));
+        atBat.setPoiX(Double.parseDouble(csv.getPoiX().trim()));
+        atBat.setPoiY(Double.parseDouble(csv.getPoiY().trim()));
+        atBat.setPoiZ(Double.parseDouble(csv.getPoiZ().trim()));
         atBat.setBatMaterial(csv.getBatMaterial());
         atBat.setUser(csv.getUser());
         atBat.setPitchAngle(csv.getPitchAngle() == null ? null : (int) Double.parseDouble(csv.getPitchAngle().trim()));

@@ -114,6 +114,8 @@ public class ReportService {
         report.setSluggingPercentage(sluggingPercentage);
         report.setOps(statService.calculateOps(sluggingPercentage, contactRate));
 
+        report.setPoiData(statService.generatePoiDataList(atBatsAbove50Ev));
+
         return report;
     }
 

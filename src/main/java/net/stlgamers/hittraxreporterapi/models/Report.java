@@ -2,6 +2,7 @@ package net.stlgamers.hittraxreporterapi.models;
 
 import lombok.Data;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.Poi;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
 
 import java.util.List;
@@ -27,5 +28,6 @@ public class Report {
     private Double contactRate;
     private Double ops;
     private List<ZoneData> strikeZoneData;
+    private List<Poi> poiData;
 
 }

@@ -35,9 +35,9 @@ public class AtBat {
     private Integer strikeZoneWidth;
     private Integer verticalDistance;
     private Integer horizontalDistance;
-    private Integer poiX;
-    private Integer poiY;
-    private Integer poiZ;
+    private Double poiX;
+    private Double poiY;
+    private Double poiZ;
     private String batMaterial;
     private String user;
     private Integer pitchAngle;
