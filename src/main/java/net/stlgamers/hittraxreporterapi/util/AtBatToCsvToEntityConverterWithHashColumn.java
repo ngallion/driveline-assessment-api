@@ -39,7 +39,7 @@ public class AtBatToCsvToEntityConverterWithHashColumn {
         atBat.setPoiY(Double.parseDouble(csv.getPoiY().trim()));
         atBat.setPoiZ(Double.parseDouble(csv.getPoiZ().trim()));
         atBat.setBatMaterial(csv.getBatMaterial());
-        atBat.setUser(csv.getUser());
+        atBat.setUser(csv.getUser() == null ? "" : csv.getUser());
         atBat.setPitchAngle(csv.getPitchAngle() == null ? null : (int) Double.parseDouble(csv.getPitchAngle().trim()));
         atBat.setBatting(csv.getBatting());
         atBat.setLevel(csv.getLevel());
