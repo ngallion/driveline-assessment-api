@@ -19,9 +19,9 @@ public class Report {
     private Double avgHhbLaunchAngle;
     private Double laStdDeviation;
     private Float battingAverage;
-    private String groundBallPercentage;
-    private String flyBallPercentage;
-    private String lineDrivePercentage;
+    private Double groundBallPercentage;
+    private Double flyBallPercentage;
+    private Double lineDrivePercentage;
     private List<ExitVeloVsLaunchAngleResult> exitVeloVsLaunchAngle;
     private SprayChart sprayChart;
     private Double sluggingPercentage;

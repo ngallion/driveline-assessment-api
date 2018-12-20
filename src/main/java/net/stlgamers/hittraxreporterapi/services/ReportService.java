@@ -99,9 +99,9 @@ public class ReportService {
         Double percentFlyBalls = ((double)numberOfFlyBalls/(double) total) * 100;
         Double percentLineDrives = ((double)numberOfLineDrives/(double) total) * 100;
 
-        report.setGroundBallPercentage(percentGroundBalls.toString().substring(0, 4));
-        report.setFlyBallPercentage(percentFlyBalls.toString().substring(0, 4));
-        report.setLineDrivePercentage(percentLineDrives.toString().substring(0, 4));
+        report.setGroundBallPercentage(percentGroundBalls);
+        report.setFlyBallPercentage(percentFlyBalls);
+        report.setLineDrivePercentage(percentLineDrives);
         report.setExitVeloVsLaunchAngle(statService.getExitVeloVsLaunchAngleSet(atBatsAbove50Ev));
 
         report.setSprayChart(statService.generateSprayChart(atBatsAbove50Ev));
