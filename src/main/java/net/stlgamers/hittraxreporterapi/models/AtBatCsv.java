@@ -91,7 +91,7 @@ public class AtBatCsv {
     public void replaceEmptyValuesWithNull() {
         try {
             for (Field f : getClass().getDeclaredFields())
-                if (f.get(this).equals(" ") || f.get(this).equals("")){
+                if (f.get(this) == null || f.get(this).equals(" ") || f.get(this).equals("")){
                     f.set(this, null);
                 }
         } catch (IllegalAccessException e) {
