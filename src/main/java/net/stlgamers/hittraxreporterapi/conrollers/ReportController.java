@@ -1,6 +1,7 @@
 package net.stlgamers.hittraxreporterapi.conrollers;
 
 import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
+import net.stlgamers.hittraxreporterapi.http.AddReportWithoutNameRequest;
 import net.stlgamers.hittraxreporterapi.http.ReportAddedResponse;
 import net.stlgamers.hittraxreporterapi.models.Report;
 import net.stlgamers.hittraxreporterapi.services.ReportService;
@@ -37,6 +38,13 @@ public class ReportController {
     @PostMapping
     public ResponseEntity<Report> addReport(@RequestBody AddReportRequest request) throws IOException {
         Report response = reportService.addReport(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/without/name")
+    public ResponseEntity<Report> addReport(@RequestBody AddReportWithoutNameRequest request) throws IOException {
+        Report response = reportService.addReport(request.getReport(), request.getName());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -50,8 +50,34 @@ public class ReportService {
         List<AtBat> savedAtBats = atBatRepository.saveAll(atBats);
 
         Report report = getReport(savedAtBats);
-
         return report;
+    }
+
+    public Report addReport(String report, String name) throws IOException {
+        if (report.substring(0, 10).contains("#")) {
+            List<AtBatCsvWithHashColumn> atBatCsvs = createListOfAtBatsFromCsvWithHashCol(report);
+            List<AtBat> atBats = withHashconvertListOfAtBatFromAtBatCsv(atBatCsvs);
+            return getReportWithNameAdded(name, atBats);
+        }
+
+        List<AtBatCsv> atBatCsvs = createListOfAtBatsFromCsvString(report);
+        List<AtBat> atBats = convertListOfAtBatCSVToAtBatEntities(atBatCsvs);
+        return getReportWithNameAdded(name, atBats);
+    }
+
+    private Report getReportWithNameAdded(String name, List<AtBat> atBats) {
+        List<AtBat> atBatsWithNameAdded = atBats
+                .stream()
+                .map(atBat -> {
+                    atBat.setUser(name);
+                    return atBat;
+                })
+                .collect(Collectors.toList());
+
+        List<AtBat> savedAtBats = atBatRepository.saveAll(atBatsWithNameAdded);
+        Report generatedReport = getReport(savedAtBats);
+
+        return generatedReport;
     }
 
     public Report getReport(String user, LocalDateTime startDate, LocalDateTime endDate) {
