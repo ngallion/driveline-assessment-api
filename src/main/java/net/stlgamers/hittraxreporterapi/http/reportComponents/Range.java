@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PositionRange {
+public class Range {
     private Double upperBound;
     private Double lowerBound;
 }

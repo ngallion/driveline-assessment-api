@@ -1,13 +1,11 @@
 package net.stlgamers.hittraxreporterapi.services;
 
+import http.reportComponents.ContactRate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.*;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
 import net.stlgamers.hittraxreporterapi.models.ZoneData;
-import net.stlgamers.hittraxreporterapi.repositories.AtBatRepository;
-import net.stlgamers.hittraxreporterapi.util.Averager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,13 +14,6 @@ import java.util.stream.IntStream;
 
 @Service
 public class StatService {
-
-    @Autowired
-    private AtBatRepository atBatRepository;
-
-    public StatService(AtBatRepository atBatRepository) {
-        this.atBatRepository = atBatRepository;
-    }
 
     public Double getAvgExitVelocity(List<AtBat> atBats) {
 
@@ -198,7 +189,7 @@ public class StatService {
         return ((double)totalPoints / (double)totalBallsInPlay);
     }
 
-    public Double calculateContactRate(List<AtBat> atBats) {
+    public ContactRate calculateContactRate(List<AtBat> atBats) {
         Integer numberOfAtBatsWith50PlusEvAndResult = Math.toIntExact(atBats
                 .stream()
                 .filter(atBat -> atBat.getExitVelocity() > 50.0 && atBat.getHorizontalAngle() > -45.0 && atBat.getHorizontalAngle() < 45.0)
@@ -213,7 +204,7 @@ public class StatService {
                                 (atBat.getExitVelocity() > 50.0 && atBat.getHorizontalAngle() > -45.0 && atBat.getHorizontalAngle() < 45.0))
                 .count());
 
-        return  ((double)numberOfAtBatsWith50PlusEvAndResult / numberOfPitchesInStrikeZone) * 100;
+        return new ContactRate(numberOfPitchesInStrikeZone, numberOfAtBatsWith50PlusEvAndResult);
     }
 
     public List<ZoneData> generateStrikeZoneData(List<AtBat> atBats) {
@@ -285,14 +276,14 @@ public class StatService {
 
     public List<Poi> generatePoiDataList(List<AtBat> atBats) {
 
-        List<PositionRange> positionRanges = Arrays.asList(
-                new PositionRange(null, 18.0),
-                new PositionRange(18.0, 12.0),
-                new PositionRange(12.0, 6.0),
-                new PositionRange(6.0, 0.0),
-                new PositionRange(0.0, -6.0),
-                new PositionRange(-6.0, -12.0),
-                new PositionRange(-12.0, null)
+        List<Range> ranges = Arrays.asList(
+                new Range(null, 18.0),
+                new Range(18.0, 12.0),
+                new Range(12.0, 6.0),
+                new Range(6.0, 0.0),
+                new Range(0.0, -6.0),
+                new Range(-6.0, -12.0),
+                new Range(-12.0, null)
         );
 
         List<AtBat> ballsInPlay = atBats
@@ -302,16 +293,16 @@ public class StatService {
                                 && !(atBat.getPoiX() == 0.0 && atBat.getPoiY() == 0.0 && atBat.getPoiZ() == 0.0))
                 .collect(Collectors.toList());
 
-        return positionRanges
+        return ranges
                 .stream()
-                .map(positionRange -> generateRangeData(ballsInPlay, positionRange))
+                .map(range -> generateRangeData(ballsInPlay, range))
                 .collect(Collectors.toList());
     }
 
-    public Poi generateRangeData(List<AtBat> ballsInPlay, PositionRange positionRange) {
+    public Poi generateRangeData(List<AtBat> ballsInPlay, Range range) {
 
-        Double upperBound = positionRange.getUpperBound();
-        Double lowerBound = positionRange.getLowerBound();
+        Double upperBound = range.getUpperBound();
+        Double lowerBound = range.getLowerBound();
 
         List<AtBat> atBatsInRange = ballsInPlay
                 .stream()
@@ -325,7 +316,41 @@ public class StatService {
 
         Double avgEv = getAvgExitVelocity(atBatsInRange);
         Double percentBallsInPlay = ((double) atBatsInRange.size() / ballsInPlay.size()) * 100;
-        return new Poi(positionRange, avgEv, percentBallsInPlay);
+        return new Poi(range, avgEv, percentBallsInPlay);
+    }
+
+    public List<PitchVeloResultSetData> generatePitchVeloData(List<AtBat> atBats) {
+        List<Range> ranges = Arrays.asList(
+                new Range(60.0, 50.0),
+                new Range(65.0, 60.0),
+                new Range(70.0, 65.0),
+                new Range(75.0, 70.0),
+                new Range(80.0, 75.0)
+        );
+        return ranges.stream()
+                .map(range -> generatePitchVeloResultSetDataInRange(atBats, range))
+                .collect(Collectors.toList());
+    }
+
+    public PitchVeloResultSetData generatePitchVeloResultSetDataInRange(List<AtBat> atBats, Range range) {
+        List<AtBat> atBatsInRange = atBats
+                .stream()
+                .filter(atBat -> atBat.getPitchVelocity() >= range.getLowerBound() && atBat.getPitchVelocity() < range.getUpperBound())
+                .collect(Collectors.toList());
+
+        return PitchVeloResultSetData.builder()
+                .range(range)
+                .avgEv(atBatsInRange
+                        .stream()
+                        .mapToDouble(AtBat::getExitVelocity)
+                        .summaryStatistics()
+                        .getAverage())
+                .avgLa(atBatsInRange
+                        .stream()
+                        .mapToInt(AtBat::getVerticalAngle)
+                        .summaryStatistics()
+                        .getAverage())
+                .build();
     }
 
     @Data
@@ -334,8 +359,4 @@ public class StatService {
         private Integer lowerLimit;
         private Integer upperLimit;
     }
-
-
-
-
 }

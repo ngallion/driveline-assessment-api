@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -68,23 +69,6 @@ public class ReportServiceTest {
         List<AtBat> actualAtBats = reportService.convertListOfAtBatCSVToAtBatEntities(csvs);
 
         System.out.println(actualAtBats);
-    }
-
-    @Test
-    public void givenAtBats_whenGenerateStrikeZoneData_thenStrikeZoneDataGenerated() {
-        AtBat atBat1 = generateTestAtBatByEvLaAndZone(10.0, 10, 1);
-        AtBat atBat2 = generateTestAtBatByEvLaAndZone(20.0, 30, 1);
-        List<AtBat> testAtBats = Arrays.asList(atBat1, atBat2);
-
-        List<ZoneData> actualZoneData = statService.generateStrikeZoneData(testAtBats);
-
-        List<ZoneData> actualPos1Data = actualZoneData
-                .stream()
-                .filter(zoneData -> zoneData.getPosition() == ZoneData.Zone.TOP_LEFT)
-                .collect(Collectors.toList());
-
-        Assert.assertEquals(java.util.Optional.of(15).get(), actualPos1Data.get(0).getAvgExitVelocity());
-        Assert.assertEquals(java.util.Optional.of(20).get(), actualPos1Data.get(0).getAvgLaunchAngle());
     }
 
     private AtBat generateTestAtBatByEvLaAndZone(Double ev, Integer la, Integer zone) {

@@ -6,6 +6,7 @@ import net.stlgamers.hittraxreporterapi.http.ReportAddedResponse;
 import net.stlgamers.hittraxreporterapi.services.ReportService;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 
 @RunWith(MockitoJUnitRunner.class)
+@Ignore
 public class ReportControllerTest {
 
     @Mock

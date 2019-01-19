@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import net.stlgamers.hittraxreporterapi.http.AddReportRequest;
+import http.reportComponents.ContactRate;
 import net.stlgamers.hittraxreporterapi.models.AtBat;
 import net.stlgamers.hittraxreporterapi.models.AtBatCsv;
 import net.stlgamers.hittraxreporterapi.models.AtBatCsvWithHashColumn;
@@ -68,10 +69,7 @@ public class ReportService {
     private Report getReportWithNameAdded(String name, List<AtBat> atBats) {
         List<AtBat> atBatsWithNameAdded = atBats
                 .stream()
-                .map(atBat -> {
-                    atBat.setUser(name);
-                    return atBat;
-                })
+                .peek(atBat -> atBat.setUser(name))
                 .collect(Collectors.toList());
 
         List<AtBat> savedAtBats = atBatRepository.saveAll(atBatsWithNameAdded);
@@ -100,21 +98,11 @@ public class ReportService {
     }
 
     public Report generateReport(List<AtBat> atBats) {
-        Report report = new Report();
 
         List<AtBat> atBatsAbove50Ev = atBats
                 .stream()
                 .filter(atBat -> atBat.getExitVelocity() >= 50.0)
                 .collect(Collectors.toList());
-
-        report.setPlayerName(atBats.get(0).getUser());
-        report.setAvgExitVelocity(statService.getAvgExitVelocity(atBatsAbove50Ev));
-        report.setMaxExitVelocity(statService.getMaxExitVelocity(atBatsAbove50Ev));
-        report.setEvStdDeviation(statService.getEvStdDeviation(atBatsAbove50Ev));
-
-        report.setAvgLaunchAngle(statService.getAvgVertAngle(atBatsAbove50Ev));
-        report.setAvgHhbLaunchAngle(statService.getAvgHhbLaunchAngle(atBatsAbove50Ev));
-        report.setLaStdDeviation(statService.getLaStdDeviation(atBatsAbove50Ev));
 
         Long numberOfGroundBalls = statService.getNumberResultType(atBatsAbove50Ev, "GB");
         Long numberOfFlyBalls = statService.getNumberResultType(atBatsAbove50Ev, "FB");
@@ -125,24 +113,29 @@ public class ReportService {
         Double percentFlyBalls = ((double)numberOfFlyBalls/(double) total) * 100;
         Double percentLineDrives = ((double)numberOfLineDrives/(double) total) * 100;
 
-        report.setGroundBallPercentage(percentGroundBalls);
-        report.setFlyBallPercentage(percentFlyBalls);
-        report.setLineDrivePercentage(percentLineDrives);
-        report.setExitVeloVsLaunchAngle(statService.getExitVeloVsLaunchAngleSet(atBatsAbove50Ev));
-
-        report.setSprayChart(statService.generateSprayChart(atBatsAbove50Ev));
-        report.setStrikeZoneData(statService.generateStrikeZoneData(atBats));
-
-        Double contactRate = statService.calculateContactRate(atBats);
+        ContactRate contactRate = statService.calculateContactRate(atBats);
         Double sluggingPercentage = statService.calculateSluggingPercentage(atBats);
 
-        report.setContactRate(contactRate);
-        report.setSluggingPercentage(sluggingPercentage);
-        report.setOps(statService.calculateOps(sluggingPercentage, contactRate));
-
-        report.setPoiData(statService.generatePoiDataList(atBatsAbove50Ev));
-
-        return report;
+        return Report.builder()
+                .playerName(atBats.get(0).getUser())
+                .avgExitVelocity(statService.getAvgExitVelocity(atBatsAbove50Ev))
+                .maxExitVelocity(statService.getMaxExitVelocity(atBatsAbove50Ev))
+                .evStdDeviation(statService.getEvStdDeviation(atBatsAbove50Ev))
+                .avgLaunchAngle(statService.getAvgVertAngle(atBatsAbove50Ev))
+                .avgHhbLaunchAngle(statService.getAvgHhbLaunchAngle(atBatsAbove50Ev))
+                .laStdDeviation(statService.getLaStdDeviation(atBatsAbove50Ev))
+                .groundBallPercentage(percentGroundBalls)
+                .flyBallPercentage(percentFlyBalls)
+                .lineDrivePercentage(percentLineDrives)
+                .exitVeloVsLaunchAngle(statService.getExitVeloVsLaunchAngleSet(atBatsAbove50Ev))
+                .sprayChart(statService.generateSprayChart(atBatsAbove50Ev))
+                .strikeZoneData(statService.generateStrikeZoneData(atBats))
+                .contactRate(contactRate)
+                .sluggingPercentage(sluggingPercentage)
+                .ops(statService.calculateOps(sluggingPercentage, contactRate.get()))
+                .poiData(statService.generatePoiDataList(atBatsAbove50Ev))
+                .pitchVeloData(statService.generatePitchVeloData(atBatsAbove50Ev))
+                .build();
     }
 
 

@@ -1,13 +1,17 @@
 package net.stlgamers.hittraxreporterapi.models;
 
+import lombok.Builder;
 import lombok.Data;
+import http.reportComponents.ContactRate;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.ExitVeloVsLaunchAngleResult;
+import net.stlgamers.hittraxreporterapi.http.reportComponents.PitchVeloResultSetData;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.Poi;
 import net.stlgamers.hittraxreporterapi.http.reportComponents.SprayChart;
 
 import java.util.List;
 
 @Data
+@Builder
 public class Report {
 
     private String playerName;
@@ -25,9 +29,10 @@ public class Report {
     private List<ExitVeloVsLaunchAngleResult> exitVeloVsLaunchAngle;
     private SprayChart sprayChart;
     private Double sluggingPercentage;
-    private Double contactRate;
+    private ContactRate contactRate;
     private Double ops;
     private List<ZoneData> strikeZoneData;
     private List<Poi> poiData;
+    private List<PitchVeloResultSetData> pitchVeloData;
 
 }

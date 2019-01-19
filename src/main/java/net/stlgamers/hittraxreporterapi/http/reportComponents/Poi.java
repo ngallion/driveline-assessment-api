@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Poi {
-    private PositionRange positionRange;
+    private Range range;
     private Double avgEv;
     private Double percentBallsInPlay;
 }
