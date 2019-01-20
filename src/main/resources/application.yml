@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://gamershittraxassessmentdb.cw1ncmoc8c6e.us-east-1.rds.amazonaws.com:5432/gamershittraxassessmentdb
+    username: tndg1
+    password: Ndg0730348!
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 5000

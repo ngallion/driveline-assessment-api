@@ -99,7 +99,12 @@ public class ReportService {
 
     public Report generateReport(List<AtBat> atBats) {
 
-        List<AtBat> atBatsAbove50Ev = atBats
+        List<AtBat> atBatsAbove50Pv = atBats
+                .stream()
+                .filter(atBat -> atBat.getPitchVelocity() >= 50.0)
+                .collect(Collectors.toList());
+
+        List<AtBat> atBatsAbove50Ev = atBatsAbove50Pv
                 .stream()
                 .filter(atBat -> atBat.getExitVelocity() >= 50.0)
                 .collect(Collectors.toList());
@@ -113,8 +118,8 @@ public class ReportService {
         Double percentFlyBalls = ((double)numberOfFlyBalls/(double) total) * 100;
         Double percentLineDrives = ((double)numberOfLineDrives/(double) total) * 100;
 
-        ContactRate contactRate = statService.calculateContactRate(atBats);
-        Double sluggingPercentage = statService.calculateSluggingPercentage(atBats);
+        ContactRate contactRate = statService.calculateContactRate(atBatsAbove50Pv);
+        Double sluggingPercentage = statService.calculateSluggingPercentage(atBatsAbove50Pv);
 
         return Report.builder()
                 .playerName(atBats.get(0).getUser())
@@ -129,7 +134,7 @@ public class ReportService {
                 .lineDrivePercentage(percentLineDrives)
                 .exitVeloVsLaunchAngle(statService.getExitVeloVsLaunchAngleSet(atBatsAbove50Ev))
                 .sprayChart(statService.generateSprayChart(atBatsAbove50Ev))
-                .strikeZoneData(statService.generateStrikeZoneData(atBats))
+                .strikeZoneData(statService.generateStrikeZoneData(atBatsAbove50Pv))
                 .contactRate(contactRate)
                 .sluggingPercentage(sluggingPercentage)
                 .ops(statService.calculateOps(sluggingPercentage, contactRate.get()))
