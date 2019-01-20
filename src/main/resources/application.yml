@@ -1,13 +1,39 @@
+server:
+  port: 5000
 spring:
+  profiles:
+    active: prod
+---
+
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gamershittraxassessmentdb
+    username: tndg1
+    password:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+        ddl-auto: update
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+---
+
+spring:
+  profiles: prod
   datasource:
     url: jdbc:postgresql://gamershittraxassessmentdb.cw1ncmoc8c6e.us-east-1.rds.amazonaws.com:5432/gamershittraxassessmentdb
     username: tndg1
     password: Ndg0730348!
     driver-class-name: org.postgresql.Driver
   jpa:
-    hibernate:
-      ddl-auto: update
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+        ddl-auto: update
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-server:
-  port: 5000

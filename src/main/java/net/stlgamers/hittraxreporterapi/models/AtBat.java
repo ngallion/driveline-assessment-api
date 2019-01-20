@@ -17,6 +17,7 @@ public class AtBat {
     private LocalDateTime timestamp;
     private String sessionTime;
     private Double pitchVelocity;
+
     private Integer strikeZonePosition;
     private String pitchType;
     private Double exitVelocity;
@@ -40,6 +41,7 @@ public class AtBat {
     private Double poiY;
     private Double poiZ;
     private String batMaterial;
+    @Column(name = "player_name")
     private String user;
     private Integer pitchAngle;
     private String batting;
