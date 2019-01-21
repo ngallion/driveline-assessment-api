@@ -2,7 +2,7 @@ server:
   port: 5000
 spring:
   profiles:
-    active: prod
+    active: dev
 ---
 
 spring:
@@ -36,4 +36,3 @@ spring:
           use_jdbc_metadata_defaults: false
         ddl-auto: update
         database-platform: org.hibernate.dialect.PostgreSQLDialect
-

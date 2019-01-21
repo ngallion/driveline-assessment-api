@@ -28,11 +28,16 @@ import java.util.Locale;
 @RequestMapping("/report")
 public class ReportController {
 
-    @Autowired
     private ReportService reportService;
 
     public ReportController(ReportService reportService) {
         this.reportService = reportService;
+    }
+
+    @GetMapping("/name")
+    public ResponseEntity<Report> getReportByPlayerName(@RequestParam("name") String playerName) {
+        Report response = reportService.getReport(playerName );
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping
@@ -49,8 +54,8 @@ public class ReportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/byDate")
-    public ResponseEntity<Report> getReportByPlayerNameAndDateRange(@RequestParam("user") String user,
+    @GetMapping("/date")
+    public ResponseEntity<Report> getReportByPlayerNameAndDateRange(@RequestParam("name") String user,
                                                                     @RequestParam("start") String start,
                                                                     @RequestParam("end") String end) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -63,7 +68,7 @@ public class ReportController {
         return ResponseEntity.status(HttpStatus.OK).body(report);
     }
 
-    @GetMapping("/player")
+    @GetMapping("/name/all")
     public ResponseEntity<List<String>> getPlayerNames() {
         return ResponseEntity.status(HttpStatus.OK).body(reportService.getAllPlayerNames());
     }

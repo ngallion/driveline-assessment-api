@@ -17,4 +17,6 @@ public interface AtBatRepository extends JpaRepository<AtBat, Long> {
 
     @Query("SELECT a FROM AtBat a WHERE a.user = ?1 AND a.timestamp > ?2 AND a.timestamp < ?3")
     List<AtBat> findAtBatsByPlayerInDateRange(String player, LocalDateTime firstDay, LocalDateTime lastDay);
+
+    List<AtBat> findAllByUser(String playerName);
 }

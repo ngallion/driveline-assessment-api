@@ -81,11 +81,12 @@ public class ReportService {
     public Report getReport(String user, LocalDateTime startDate, LocalDateTime endDate) {
         List<AtBat> atBats = atBatRepository.findAtBatsByPlayerInDateRange(user, startDate, endDate);
 
-        if (atBats.size() == 0) {
-            throw new IllegalArgumentException("No sessions found for player within date range");
-        }
+        return getReport(atBats);
+    }
 
-        return generateReport(atBats);
+    public Report getReport(String playerName) {
+        List<AtBat> atBats = atBatRepository.findAllByUser(playerName);
+        return getReport(atBats);
     }
 
     private Report getReport(List<AtBat> atBats) {
@@ -192,4 +193,5 @@ public class ReportService {
     public List<String> getAllPlayerNames() {
         return atBatRepository.findAllDistinctPlayerNames();
     }
+
 }
