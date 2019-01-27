@@ -18,13 +18,16 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
 public class ReportService {
 
-    @Autowired
     private AtBatRepository atBatRepository;
 
     private StatService statService;
@@ -41,17 +44,14 @@ public class ReportService {
             List<AtBat> atBats = withHashconvertListOfAtBatFromAtBatCsv(atBatCsvs);
             List<AtBat> savedAtBats = atBatRepository.saveAll(atBats);
 
-            Report report = getReport(savedAtBats);
-
-            return report;
+            return generateReport(savedAtBats);
         }
 
         List<AtBatCsv> atBatCsvs = createListOfAtBatsFromCsvString(request.getReport());
         List<AtBat> atBats = convertListOfAtBatCSVToAtBatEntities(atBatCsvs);
         List<AtBat> savedAtBats = atBatRepository.saveAll(atBats);
 
-        Report report = getReport(savedAtBats);
-        return report;
+        return generateReport(savedAtBats);
     }
 
     public Report addReport(String report, String name) throws IOException {
@@ -73,23 +73,24 @@ public class ReportService {
                 .collect(Collectors.toList());
 
         List<AtBat> savedAtBats = atBatRepository.saveAll(atBatsWithNameAdded);
-        Report generatedReport = getReport(savedAtBats);
 
-        return generatedReport;
+        return generateReport(savedAtBats);
     }
 
-    public Report getReport(String user, LocalDateTime startDate, LocalDateTime endDate) {
-        List<AtBat> atBats = atBatRepository.findAtBatsByPlayerInDateRange(user, startDate, endDate);
+    public Report getReport(List<String> playerNames, LocalDateTime startDate, LocalDateTime endDate) {
+        List<AtBat> atBats = playerNames.stream()
+                .map(name -> atBatRepository.findAtBatsByPlayerInDateRange(name, startDate, endDate))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
 
-        return getReport(atBats);
+        return generateReport(atBats);
     }
 
-    public Report getReport(String playerName) {
-        List<AtBat> atBats = atBatRepository.findAllByUser(playerName);
-        return getReport(atBats);
-    }
-
-    private Report getReport(List<AtBat> atBats) {
+    public Report getReport(List<String> playerNames) {
+        List<AtBat> atBats = playerNames.stream()
+                .map(name -> atBatRepository.findAllByUserLike(name))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
 
         if (atBats.size() == 0) {
             throw new IllegalArgumentException("No sessions found for player within date range");

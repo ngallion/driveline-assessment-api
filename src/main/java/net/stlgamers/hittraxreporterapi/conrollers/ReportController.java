@@ -35,8 +35,8 @@ public class ReportController {
     }
 
     @GetMapping("/name")
-    public ResponseEntity<Report> getReportByPlayerName(@RequestParam("name") String playerName) {
-        Report response = reportService.getReport(playerName );
+    public ResponseEntity<Report> getReportByPlayerName(@RequestParam("name") List<String> playerNames) {
+        Report response = reportService.getReport(playerNames);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -55,7 +55,7 @@ public class ReportController {
     }
 
     @GetMapping("/date")
-    public ResponseEntity<Report> getReportByPlayerNameAndDateRange(@RequestParam("name") String user,
+    public ResponseEntity<Report> getReportByPlayerNameAndDateRange(@RequestParam("name") List<String> playerNames,
                                                                     @RequestParam("start") String start,
                                                                     @RequestParam("end") String end) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -64,7 +64,7 @@ public class ReportController {
         LocalDateTime endDate = LocalDateTime
                 .of(LocalDate.parse(end, dateTimeFormatter), LocalDateTime.now().toLocalTime());
 
-        Report report = reportService.getReport(user, startDate, endDate);
+        Report report = reportService.getReport(playerNames, startDate, endDate);
         return ResponseEntity.status(HttpStatus.OK).body(report);
     }
 
